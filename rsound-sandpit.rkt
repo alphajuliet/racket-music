@@ -8,28 +8,53 @@
          rsound
          rsound/piano-tones
          rsound/envelope
-         "tonnetz.rkt")
+         "music.rkt")
 
 (provide (all-defined-out))
 
-; ---------------------
-; Define a MIDI note.
-(struct Note (pitch time duration) #:transparent)
+; Convert time in seconds to samples
+(define (s n)
+  (* n FRAME-RATE))
 
 ; ---------------------
-; e.g. (note->midi 'C 3) -> 48
-; NoteName -> Integer -> Integer
-(define (note->midi note octave)
-  (let ([index (note->num note)]
-        [base (+ 12 (* octave 12))])
-    (+ index base)))
+; Define a MIDI note and event
+(struct Note (name octave) #:transparent) ; e.g. (Note 'C 3)
+(struct NoteEvent (pitch time duration) #:transparent) ; e.g. (NoteEvent 48 5000 1.0)
+
+; ---------------------
+; e.g. (note->midi (Note 'C 3)) -> 48
+; Note -> Integer
+(define (note->midi note)
+  (+ (note->num (Note-name note))
+     (+ 12
+        (* (Note-octave note) 12))))
+
+; e.g. (pitch-list '(F 3 A 3 C 4 E 4)) → '(53 57 60 64)
+; pitch-list :: [NoteName|Integer] → [Integer]
+(define (pitch-list lst)
+  (for/list ([n (filter-not integer? lst)]
+             [v (filter integer? lst)])
+    (note->midi (Note n v))))
+
+; Alternative constructor for NoteEvent
+; make-event :: Note → Real → Real → NoteEvent
+(define (make-event note time dur)
+  (NoteEvent (note->midi note) time dur))
 
 ; ---------------------
 ; Sound generators
 
+; Define an ADSR envelope
+(define (my-adsr att peak dec sus rel total)
+  (envelope-signal `((0 0.0)
+                     (,att ,peak)
+                     (,(+ att dec) ,sus)
+                     (,(- total rel) ,sus)
+                     (,total 0.0))))
+
 ; Define a simple 2-osc detuned saw patch with a bit of vibrato
 ; double-saw :: Real -> Signal
-(define (double-saw f)
+(define (saw2 f)
   (network ()
            [lfo <= sine-wave 5]
            [saw1 <= sawtooth-wave (+ (* f 1.005)
@@ -37,47 +62,57 @@
            [saw2 <= sawtooth-wave (+ (* f 0.995)
                                      (* 1.5 lfo))]
            [osc = (+ saw1 saw2)]
-           [out = (* 0.1 osc)]))
+           [env <= (my-adsr (s 0.2) 1.0 (s 0.5) 0.8 (s 0.5) (s 2.0))]
+           [out = (* 0.1 osc env)]))
 
 ; Simple sine wave patch
 ; sine :: Real -> Signal
-(define (sine f (vol 0.1))
+(define (sine f)
   (network ()
            [osc <= sine-wave f]
-           [out = (* vol osc)]))
+           [out = (* 0.5 osc)]))
 
 ; ---------------------
 ; Play notes
 
-; note->rs :: Signal -> Note -> RSound
-(define (note->rs sound note)
-  (let ([samples (* (Note-duration note) 44100)])
-    (~>> (Note-pitch note)
+; Play a sound, with a slight ADSR envelope
+; note->rs :: Signal -> NoteEvent -> RSound
+(define (note->rs sound n)
+  (let ([samples (* (NoteEvent-duration n) 44100)]
+        #;[env (my-adsr 0.2 1.0 0.2 0.8 0.5)])
+    (~>> (NoteEvent-pitch n)
          midi-note-num->pitch
          sound
-         (signal->rsound samples))))
+         (signal->rsound samples)
+         #;(rs-mult env))))
 
-; play-midi-note :: Signal -> Integer -> ()
-; e.g. (play-midi-note double-saw 48)
-(define (play-midi-note sound note)
-  (play (note->rs sound note)))
+; play-note :: Signal -> Note -> ()
+; e.g. (play-midi-note double-saw (NoteEvent (Note 'F 3) 0 1.0))
+(define (play-note sound note-event)
+  (play (note->rs sound note-event)))
 
 ; Play a chord of midi notes
-; play-chord :: Signal -> [Note] -> ()
+; play-chord :: Signal -> [NoteEvent] -> ()
 (define (play-chord sound lst)
   (let ([ps (make-pstream)])
     (for ([note lst])
       (pstream-queue ps
                      (note->rs sound note)
-                     10000))))
+                     (NoteEvent-time note)))))
 
-; Make responsive
+; Play simple chord 
+(define (play-chord+ sound lst dur)
+  (play-chord saw2
+              (map+ (λ (m) (NoteEvent m 10000 dur))
+                    (pitch-list lst))))
+
+; Make more responsive
 (collect-garbage)
 
-(play-chord double-saw (list (Note 48 0 2.0)
-                             (Note 52 0 2.0)
-                             (Note 55 0 2.0)
-                             (Note 59 0 2.0)))
+; ---------------------
+; Examples
 
+(define (ex1)
+  (play-chord+ saw2 '(F 3 A 3 C 4 E 4) 2.0))
 
 ; The End
