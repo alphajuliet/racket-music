@@ -42,6 +42,24 @@
 (define (canonical ch)
   (map+ (curry transpose (- (list-min ch))) ch))
 
+; flatten :: [a] → [a] → [a]
+(define (flatten lst)
+  (cond ((null? lst) '())
+        ((pair? lst)
+         (append (flatten (car lst)) (flatten (cdr lst))))
+        (else (list lst))))
+
+; zip :: [a] → [a] → ... → [a]
+(define zip (curry map list))
+
+; zip-with
+(define (zip-with fn lst1 lst2)
+  (map (curry apply fn) (zip lst1 lst2)))
+
+; Zip and flatten
+; flatzip :: [a] → [a] → [a]
+(define flatzip (compose flatten zip))
+
 ;-----------------------
 ; Musical data structures and conversions
 
@@ -177,15 +195,15 @@
 (define H (compose L P L))
 
 ; Define wrapped versions
+; e.g. (P* (sc 'C maj)) → '(C Eb G)
 ; P* :: [NoteName] → [NoteName]
+; etc.
 (define P* (wrap* P))
 (define L* (wrap* L))
 (define R* (wrap* R))
 (define N* (wrap* N))
 (define S* (wrap* S))
 (define H* (wrap* H))
-
-; examples... (P* (sc 'C maj)) → '(C Eb G)
 
 ;----------------
 (displayln "Loaded musical definitions.")
