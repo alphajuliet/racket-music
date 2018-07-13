@@ -4,61 +4,41 @@
 ; AJ 2017-04-28
 
 (require rsound
-         threading)
+         threading
+         rakeda)
 
 (provide (all-defined-out))
 
 ;-----------------------
 ; Utility functions
 
-(define (identity x) x)
-
 ; Generic map that is polymorphic across lists and values
 ; map+ :: ([a] → [b]) → [a] → [b]
 ; map+ :: ([a] → [b]) → a → b
-(define (map+ f x)
+(define/c (map+ f x)
   (if (list? x)
-      (map f x)
-      (f x)))
+      (r:map f x)
+      (apply f (list x))))
 
 ; sort-nums :: Sortable a ⇒ [a] → [a]
-(define (sort-nums lst) (sort lst <))
-
-; Rotate a list one position left
-; e.g. (rotate '(F# A C#)) → '(A C# F#)
-; rotate :: [a] → [a]
-(define (rotate ch)
-  (if (list? ch)
-      (append (rest ch) (list (first ch)))
-      ch))
+(define sort-nums (r:sort <))
 
 ; Minimum of a list
 ; list-min :: Sortable a ⇒ [a] → a
 (define list-min (curry argmin identity))
 
+;-----------------------
+(define mod12 (r:flip modulo 12))
+(define/c (transpose a b)
+  (map+ (compose mod12 (r:add a)) b))
+(define/c (invert a b)
+  (map+ (compose mod12 (r:subtract a)) b))
+
 ; Canonical structure of a list
-; e.g (canonical '(2 6 8)) -> '(0 4 7), i.e. this is a major chord
+; e.g (canonical '(2 6 8)) -> '(0 4 6), i.e. this is a major chord
 ; canonical :: Sortable a ⇒ [a] → [a]
 (define (canonical ch)
-  (map+ (curry transpose (- (list-min ch))) ch))
-
-; flatten :: [a] → [a] → [a]
-(define (flatten lst)
-  (cond ((null? lst) '())
-        ((pair? lst)
-         (append (flatten (car lst)) (flatten (cdr lst))))
-        (else (list lst))))
-
-; zip :: [a] → [a] → ... → [a]
-(define zip (curry map list))
-
-; zip-with
-(define (zip-with fn lst1 lst2)
-  (map (curry apply fn) (zip lst1 lst2)))
-
-; Zip and flatten
-; flatzip :: [a] → [a] → [a]
-(define flatzip (compose flatten zip))
+  (sort-nums (map+ (transpose (- (list-min ch))) ch)))
 
 ;-----------------------
 ; Musical data structures and conversions
@@ -74,12 +54,12 @@
 
 ; Polymorphic conversions between note numbers and note names
 ; num->note :: [Integer] → [NoteName] || Integer → NoteName
-(define (num->note n)
-  (map+ (curry list-ref noteNames) n))
+(define num->note
+  (map+ (r:flip r:nth noteNames)))
 
 ; note->num :: [NoteName] → [Integer] || NoteName → Integer
-(define (note->num n)
-  (map+ (curry index-of noteNames) n))
+(define note->num
+  (map+ (r:flip r:index-of noteNames)))
 
 ; Sorted version of num->note
 ; sorted-num->note :: [Integer] → [NoteName]
@@ -98,17 +78,12 @@
        num->note))
 
 ;-----------------------
-(define mod12 (curryr modulo 12))
-(define transpose (compose mod12 +))
-(define (invert n x) (mod12 (- n x)))
-
-;-----------------------
 ; Define a chord as a list of intervals from the base note. It returns a
 ; function that takes a given base note number and returns the chord of note numbers.
 ; define Chord = Integer → [Integer]
 ; chord :: [Integer] → Chord
 (define (chord ns)
-  (λ (n) (map (curry transpose n) ns)))
+  (λ (n) (r:map (curry transpose n) ns)))
 
 ; Define chords as functions operating on a note number
 (define-syntax-rule (defchord name ns)
@@ -140,12 +115,12 @@
 (define main-chords (list major minor x7 maj7 min7))
 
 ; Show a list of chords for a given note
-; apply-map :: [Chord] → Symbol → [Symbol]
-(define (apply-map fns x)
-  (map (λ (f) (f x)) fns))
+; apply-map :: [Chord] → NoteName → [NoteName]
+(define (apply-map fns lst)
+  (r:map (λ (f) (f lst)) fns))
 
 (define (show-chords ch nt)
-  (map num->note (apply-map ch (note->num nt))))
+  (r:map num->note (apply-map ch (note->num nt))))
 
 ; Match note numbers to one or more chord names
 ; This will do a match across all the given chords
@@ -154,15 +129,20 @@
   (let ([x (map canonical (permutations lst))])
     #f))
 
+; Show all inversions of a chord
+; @@TODO: improve somehow
+(define (inversions ch)
+  (r:nest-list r:rotate-left (length ch) ch))
+
 ;----------------
 ; Friendly definitions for use
 
-(define (tr* n nt) (wrap2 transpose n nt))
-(define (inv* n nt) (wrap2 invert n nt))
+(define/c (tr* n nt) (wrap2 transpose n nt))
+(define/c (inv* n nt) (wrap2 invert n nt))
 
 ; Show chord
 ; sc :: NoteName → Chord → [NoteName]
-(define (sc root ch)
+(define/c (sc root ch)
   ((wrap ch) root))
 
 ; e.g. (tr* 4 (sc 'F# maj7)) -> '(Bb D F A)
@@ -176,19 +156,19 @@
 ; - L doesn't have a recognised musical mapping: L(Cmaj) = Emin
 
 (define (P triad)
-  (map (curry invert (+ (list-ref triad 0)
-                        (list-ref triad 2)))
-       triad))
+  (r:map (invert (r:add (r:nth 0 triad)
+                        (r:nth 2 triad)))
+         triad))
 
 (define (L triad)
-  (map (curry invert (+ (list-ref triad 1)
-                        (list-ref triad 2)))
-       triad))
+  (r:map (invert (r:add (r:nth 1 triad)
+                        (r:nth 2 triad)))
+         triad))
 
 (define (R triad)
-  (map (curry invert (+ (list-ref triad 0)
-                        (list-ref triad 1)))
-       triad))
+  (r:map (invert (r:add (r:nth 0 triad)
+                        (r:nth 1 triad)))
+         triad))
 
 (define N (compose P L R))
 (define S (compose R P L))
