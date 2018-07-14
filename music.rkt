@@ -130,7 +130,6 @@
     #f))
 
 ; Show all inversions of a chord
-; @@TODO: improve somehow
 (define (inversions ch)
   (r:nest-list r:rotate-left (length ch) ch))
 

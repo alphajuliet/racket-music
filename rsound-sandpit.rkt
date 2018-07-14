@@ -5,6 +5,7 @@
 ; See https://github.com/jbclements/RSound
 
 (require threading
+         lens
          rsound
          rsound/piano-tones
          rsound/envelope
@@ -13,7 +14,7 @@
 (provide (all-defined-out))
 
 ; Convert time in seconds to samples
-(define (s n)
+(define (sec n)
   (* n FRAME-RATE))
 
 ; ---------------------
@@ -39,7 +40,9 @@
 ; Alternative constructor for NoteEvent
 ; make-event :: Note → Real → Real → NoteEvent
 (define (make-event note time dur)
-  (NoteEvent (note->midi note) time dur))
+  (if (Note? note)
+      (NoteEvent (note->midi note) time dur)
+      (NoteEvent note time dur)))
 
 ; ---------------------
 ; Sound generators
@@ -53,17 +56,17 @@
                      (,total 0.0))))
 
 ; Define a simple 2-osc detuned saw patch with a bit of vibrato
+; and some LFO on the filter
 ; double-saw :: Real -> Signal
 (define (saw2 f)
   (network ()
-           [lfo <= sine-wave 5]
-           [saw1 <= sawtooth-wave (+ (* f 1.005)
-                                     (* 1.5 lfo))]
-           [saw2 <= sawtooth-wave (+ (* f 0.995)
-                                     (* 1.5 lfo))]
-           [osc = (+ saw1 saw2)]
-           [env <= (my-adsr (s 0.2) 1.0 (s 0.5) 0.8 (s 0.5) (s 2.0))]
-           [out = (* 0.1 osc env)]))
+           [lfo1 <= sine-wave 5.0]
+           [saw-1 <= sawtooth-wave (+ (* f 1.005)
+                                      (* 0.6 lfo1))]
+           [saw-2 <= sawtooth-wave (+ (* f 0.995)
+                                      (* 0.6 lfo1))]
+           [env <= (my-adsr (sec 0.2) 1.0 (sec 0.5) 0.8 (sec 0.5) (sec 2.0))]
+           [out = (* 0.1 (+ saw-1 saw-2) env)]))
 
 ; Simple sine wave patch
 ; sine :: Real -> Signal
@@ -75,19 +78,17 @@
 ; ---------------------
 ; Play notes
 
-; Play a sound, with a slight ADSR envelope
+; Play a sound
 ; note->rs :: Signal -> NoteEvent -> RSound
 (define (note->rs sound n)
-  (let ([samples (* (NoteEvent-duration n) 44100)]
-        #;[env (my-adsr 0.2 1.0 0.2 0.8 0.5)])
+  (let ([samples (sec (NoteEvent-duration n))])
     (~>> (NoteEvent-pitch n)
          midi-note-num->pitch
          sound
-         (signal->rsound samples)
-         #;(rs-mult env))))
+         (signal->rsound samples))))
 
 ; play-note :: Signal -> Note -> ()
-; e.g. (play-midi-note double-saw (NoteEvent (Note 'F 3) 0 1.0))
+; e.g. (play-midi-note double-saw (make-event (Note 'F 3) 0 1.0))
 (define (play-note sound note-event)
   (play (note->rs sound note-event)))
 
@@ -102,9 +103,8 @@
 
 ; Play simple chord 
 (define (play-chord+ sound lst dur)
-  (play-chord saw2
-              (map+ (λ (m) (NoteEvent m 10000 dur))
-                    (pitch-list lst))))
+  (play-chord saw2 (map+ (λ (m) (NoteEvent m 10000 dur))
+                         (pitch-list lst))))
 
 ; Make more responsive
 (collect-garbage)
@@ -114,5 +114,8 @@
 
 (define (ex1)
   (play-chord+ saw2 '(F 3 A 3 C 4 E 4) 2.0))
+
+; What I want...
+; (play-chord+ 'F maj7)
 
 ; The End
