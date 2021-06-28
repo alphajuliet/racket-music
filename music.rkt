@@ -38,11 +38,11 @@
 (define/c (transpose n x)
   ;; Transpose a note or chord, modulo 12
   ;; e.g. (transpose 2 '(0 3 7)) => '(2 5 9)
-  (map+ (compose mod12 (r:add n)) x))
+  (map+ (compose mod12 (r:+ n)) x))
 
 (define/c (invert n x)
   ;; Invert modulo 12
-  (map+ (compose mod12 (r:subtract n)) x))
+  (map+ (compose mod12 (r:- n)) x))
 
 (define (canonical ch)
   ;; Canonical structure of a list
@@ -203,8 +203,8 @@
 ;; - L doesn't have a recognised musical mapping: L(Cmaj) = Emin
 
 (define (involute n1 n2 triad)
-  (r:map (invert (r:add (r:nth n1 triad)
-                        (r:nth n2 triad)))
+  (r:map (invert (r:+ (r:nth n1 triad)
+                      (r:nth n2 triad)))
          triad))
 
 (define (P triad) (involute 0 2 triad))
