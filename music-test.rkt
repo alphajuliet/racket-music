@@ -45,7 +45,7 @@
              (check-equal? (collapse 'Db x) '(C Eb Ab))
              (check-equal? (collapse 'C# x) '(C D# G#)))
 
-  (test-case "sorted-num->note"
+  #;(test-case "sorted-num->note"
              (check-equal? (sorted-num->note '(4 2 0)) '(C D E)))
 
   (test-case "Wrapped functions"

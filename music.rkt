@@ -28,7 +28,7 @@
 (define list-min
   ;; Minimum of a list
   ;; list-min :: Sortable a ⇒ [a] → a
-  (map+ (r:argmin identity)))
+  (r:argmin identity))
 
 (define mod12
   ;; Modulo 12
@@ -48,7 +48,7 @@
   ;; Canonical structure of a list
   ;; e.g (canonical '(2 6 8)) -> '(0 4 6), i.e. this is a major chord
   ;; canonical :: Sortable a ⇒ [a] → [a]
-  (sort-nums
+  (r:sort <
    (map+ (transpose (- (list-min ch))) ch)))
 
 ;;-----------------------
