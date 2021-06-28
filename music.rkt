@@ -202,35 +202,18 @@
 ;; - R is an involution between relative major and minor triads: R(Cmaj) = Amin
 ;; - L doesn't have a recognised musical mapping: L(Cmaj) = Emin
 
-(define (P triad)
-  (r:map (invert (r:add (r:nth 0 triad)
-                        (r:nth 2 triad)))
+(define (involute n1 n2 triad)
+  (r:map (invert (r:add (r:nth n1 triad)
+                        (r:nth n2 triad)))
          triad))
 
-(define (L triad)
-  (r:map (invert (r:add (r:nth 1 triad)
-                        (r:nth 2 triad)))
-         triad))
-
-(define (R triad)
-  (r:map (invert (r:add (r:nth 0 triad)
-                        (r:nth 1 triad)))
-         triad))
-
+(define (P triad) (involute 0 2 triad))
+(define (L triad) (involute 1 2 triad))
+(define (R triad) (involute 0 1 triad))
 (define N (compose P L R))
 (define S (compose R P L))
 (define H (compose L P L))
 
-;; Define wrapped versions
-;; e.g. (P* (sc 'C maj)) → '(C Eb G)
-;; P* :: [NoteName] → [NoteName]
-;; etc.
-(define P* (wrap* P))
-(define L* (wrap* L))
-(define R* (wrap* R))
-(define N* (wrap* N))
-(define S* (wrap* S))
-(define H* (wrap* H))
 
 ;;----------------
 (displayln "Loaded musical definitions.")
