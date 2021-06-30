@@ -6,7 +6,9 @@
 (require rsound
          threading
          define-with-spec
-         rakeda)
+         2htdp/image
+         rakeda
+         "visual.rkt")
 
 (provide (all-defined-out))
 
@@ -38,11 +40,11 @@
 (define/c (transpose n x)
   ;; Transpose a note or chord, modulo 12
   ;; e.g. (transpose 2 '(0 3 7)) => '(2 5 9)
-  (map+ (compose mod12 (r:+ n)) x))
+  (map+ (compose1 mod12 (r:+ n)) x))
 
 (define/c (invert n x)
   ;; Invert modulo 12
-  (map+ (compose mod12 (r:- n)) x))
+  (map+ (compose1 mod12 (r:- n)) x))
 
 (define (canonical ch)
   ;; Canonical structure of a list
@@ -67,7 +69,7 @@
 (define num->note
   ;; Polymorphic conversions between note numbers and note names
   ;; num->note :: [Integer] → [NoteName] || Integer → NoteName
-  (map+ (compose (r:flip r:nth noteNames) mod12)))
+  (map+ (compose1 (r:flip r:nth noteNames) mod12)))
 
 ;; note->num :: [NoteName] → [Integer] || NoteName → Integer
 (define note->num
@@ -80,7 +82,7 @@
 
 (define num->note*
   ;; num->note* :: [Integer] → [[NoteName]] || Integer → [NoteName]
-  (map+ (compose (r:flip r:nth allNotes) mod12)))
+  (map+ (compose1 (r:flip r:nth allNotes) mod12)))
 
 (define (note->num* n)
   ;; note->num* :: NoteName → Integer || [NoteName] → [Integer]
@@ -100,15 +102,15 @@
 ;; Define wrappers around functions that transform note numbers
 
 (define/c (wrap f x)
-  ((compose num->note f note->num) x))
+  ((compose1 num->note f note->num) x))
 
 (define sorted-num->note
   ;; Sorted version of num->note
   ;; sorted-num->note :: [Integer] → [NoteName]
-  (compose num->note sort-nums))
+  (compose1 num->note sort-nums))
 
 (define/c (wrap-sorted f x)
-  ((compose sorted-num->note f note->num) x))
+  ((compose1 sorted-num->note f note->num) x))
 
 (define (wrap2 f x y)
   (~>> y
@@ -123,7 +125,7 @@
   ;; Wrap note->num* and num->note*
   ;; e.g. (wrap* (transpose 2) '(C D E)) => '(D E F#)
   ;;      (wrap* maj2 'G) => '(G A B D)
-  ((compose (collapse 'C)
+  ((compose1 (collapse 'C)
             num->note*
             f
             note->num*) x))
@@ -131,7 +133,7 @@
 (define/c (wrapl* f x)
   ;; Wrap a function that returns a list
   ;; e.g. (wrap* inversions '(C E G)) => '((G C E) (C E G) (E G C))
-  ((compose (r:map (collapse 'C))
+  ((compose1 (r:map (collapse 'C))
             (r:map num->note*)
             f
             note->num*) x))
@@ -166,10 +168,21 @@
 (defchord maj2    '(0 2 4 7))
 (defchord min2    '(0 2 3 7))
 (defchord dim     '(0 3 6))
+(defchord maj4    '(0 4 5))
+(defchord min4    '(0 3 5))
+
+(define (c* note ch)
+  ;; Syntactic sugar
+  ;; (c* 'E maj2) => '(4 6 8 11)
+  (ch (note->num* note)))
 
 (define main-chords
   ;; main-chords :: [Chord]
   (list major minor x7 maj7 min7))
+
+(define all-chords
+  (list major minor x4+5 x7 maj7 min7 maj9 min9 maj7+9
+        min7+9 maj6 min6 aug maj2 min2 dim maj4 min4))
 
 (define show-main-chords
   ;; Show all the main chords
@@ -203,6 +216,7 @@
 ;; - L doesn't have a recognised musical mapping: L(Cmaj) = Emin
 
 (define (involute n1 n2 triad)
+  ;; Generic function to apply involutions
   (r:map (invert (r:+ (r:nth n1 triad)
                       (r:nth n2 triad)))
          triad))
@@ -210,12 +224,11 @@
 (define (P triad) (involute 0 2 triad))
 (define (L triad) (involute 1 2 triad))
 (define (R triad) (involute 0 1 triad))
-(define N (compose P L R))
-(define S (compose R P L))
-(define H (compose L P L))
-
+(define N (compose1 P L R))
+(define S (compose1 R P L))
+(define H (compose1 L P L))
 
 ;;----------------
-(displayln "Loaded musical definitions.")
+(displayln ":: Loaded musical definitions.")
 
 ;; The End
