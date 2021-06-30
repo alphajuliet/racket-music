@@ -17,8 +17,8 @@
 
 (define/c (map+ f x)
   ;; Generic map that is polymorphic across lists and values
-  ;; map+ :: ([a] → [b]) → [a] → [b]
-  ;; map+ :: ([a] → [b]) → a → b
+  ;; map+ :: (a → b) → a → b
+  ;; map+ :: (a → b) → [a] → [b]
   (if (list? x)
       (r:map f x)
       (apply f (list x))))
@@ -66,27 +66,20 @@
   ;; noteNames :: [NoteNames]
   `(C C# D Eb E F F# G Ab A Bb B))
 
-(define num->note
-  ;; Polymorphic conversions between note numbers and note names
-  ;; num->note :: [Integer] → [NoteName] || Integer → NoteName
-  (map+ (compose1 (r:flip r:nth noteNames) mod12)))
-
-;; note->num :: [NoteName] → [Integer] || NoteName → Integer
-(define note->num
-  (map+ (r:flip r:index-of noteNames)))
-
-;;-----------------------
 (define allNotes
   ;; Comprehensive list of note names
   '((C) (C# Db) (D) (D# Eb) (E) (F) (F# Gb) (G) (G# Ab) (A) (A# Bb) (B)))
 
+;;-----------------------
 (define num->note*
   ;; num->note* :: [Integer] → [[NoteName]] || Integer → [NoteName]
   (map+ (compose1 (r:flip r:nth allNotes) mod12)))
 
 (define (note->num* n)
   ;; note->num* :: NoteName → Integer || [NoteName] → [Integer]
-  (map+ (λ (e) (r:index-where (curry true?) (map (curry r:index-of e) allNotes))) n))
+  (map+ (λ (e) (r:index-where (curry true?)
+                              (map (curry r:index-of e) allNotes)))
+        n))
 
 (define/c (collapse note lst)
   ;; Collapse a list of note lists based on the given note
@@ -98,26 +91,6 @@
         (map last lst)
         (map first lst))))
  
-;;-----------------------
-;; Define wrappers around functions that transform note numbers
-
-(define/c (wrap f x)
-  ((compose1 num->note f note->num) x))
-
-(define sorted-num->note
-  ;; Sorted version of num->note
-  ;; sorted-num->note :: [Integer] → [NoteName]
-  (compose1 num->note sort-nums))
-
-(define/c (wrap-sorted f x)
-  ((compose1 sorted-num->note f note->num) x))
-
-(define (wrap2 f x y)
-  (~>> y
-       note->num
-       (map+ (curry f x))
-       num->note))
-
 ;;-----------------------
 ;; Define better wrappers
 

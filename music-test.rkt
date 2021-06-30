@@ -31,13 +31,9 @@
              (check-equal? (canonical '(6 2 8)) '(0 4 6)))
 
   (test-case "num->note"
-             (check-equal? (num->note 2) 'D)
-             (check-equal? (num->note '(0 2 4)) '(C D E))
              (check-equal? (num->note* '(1 3 4)) '((C# Db) (D# Eb) (E))))
 
   (test-case "note->num"
-             (check-equal? (note->num 'E) 4)
-             (check-equal? (note->num '(C D E)) '(0 2 4))
              (check-equal? (note->num* 'Ab) 8))
 
   (test-case "collapse"
