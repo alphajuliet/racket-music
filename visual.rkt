@@ -1,10 +1,16 @@
 #lang racket
 ;; Visualise chords on a circle
 
+;;----------------
+;; Imports and exports
+
 (require threading
          2htdp/image)
 
-(provide (all-defined-out))
+(provide view-chord)
+
+;;----------------
+;; Utilities
 
 (define (pairs lst)
   (for/list ([i (range (sub1 (length lst)))])
@@ -14,6 +20,7 @@
 ;;----------------
 ;; Visualise chords
 
+;; 2D point
 (struct pt (x y) #:transparent)
 
 (define (pt+ p1 p2)
@@ -32,10 +39,16 @@
   ;; Draw the points around the circumference
   (let ([note (circle 4 "solid" (color 100 100 255 255))])
     (foldl (λ (i result)
-             (let ([org (xy r i)])
-               (overlay/offset result (pt-x org) (pt-y org) note)))
+             (let ([loc (xy r i)])
+               (overlay/offset result (pt-x loc) (pt-y loc) note)))
            base-shape
            (range 0 12))))
+
+(define (draw-first-note n r base-shape)
+  (let ([loc (xy r n)])
+    (overlay/offset base-shape
+                    (pt-x loc) (pt-y loc)
+                    (circle 4 "solid" "green"))))
 
 (define (draw-chord ch r base-shape)
   ;; Draw a closed set of lines that corresponds to the chord
@@ -56,6 +69,7 @@
   (let* ([r 100]
          [base (circle r "outline" "white")])
     (~>> base
+         (draw-first-note (first ch) r)
          (draw-notes r)
          (draw-chord ch r))))
 
