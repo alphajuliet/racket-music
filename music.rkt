@@ -3,10 +3,10 @@
 ;; Define musical functions
 ;; AJ 2017-04-28
 
-(require rsound
-         threading
+(require threading
+         ;; rsound
          define-with-spec
-         2htdp/image
+         ;; 2htdp/image
          rakeda
          "visual.rkt")
 
@@ -23,12 +23,8 @@
       (r:map f x)
       (apply f (list x))))
 
-(define sort-nums
-  ;; sort-nums :: Sortable a ⇒ [a] → [a]
-  (map+ (r:sort <)))
-
 (define list-min
-  ;; Minimum of a list
+  ;; Minimum value of a list
   ;; list-min :: Sortable a ⇒ [a] → a
   (r:argmin identity))
 
@@ -46,10 +42,11 @@
   ;; Invert modulo 12
   (map+ (compose1 mod12 (r:- n)) x))
 
-(define (canonical ch)
+(define/spec (canonical ch)
   ;; Canonical structure of a list
   ;; e.g (canonical '(2 6 8)) -> '(0 4 6), i.e. this is a major chord
   ;; canonical :: Sortable a ⇒ [a] → [a]
+  (-> (listof integer?) (listof integer?))
   (r:sort <
    (map+ (transpose (- (list-min ch))) ch)))
 
@@ -64,19 +61,19 @@
   ;; Note names, using my favourite mix of sharps and flats
   ;; define NoteName = Symbol
   ;; noteNames :: [NoteNames]
-  `(C C# D Eb E F F# G Ab A Bb B))
+  '(C C# D Eb E F F# G Ab A Bb B))
 
 (define allNotes
   ;; Comprehensive list of note names
   '((C) (C# Db) (D) (D# Eb) (E) (F) (F# Gb) (G) (G# Ab) (A) (A# Bb) (B)))
 
 ;;-----------------------
-(define num->note*
-  ;; num->note* :: [Integer] → [[NoteName]] || Integer → [NoteName]
+(define num->note
+  ;; num->note :: [Integer] → [[NoteName]] || Integer → [NoteName]
   (map+ (compose1 (r:flip r:nth allNotes) mod12)))
 
-(define (note->num* n)
-  ;; note->num* :: NoteName → Integer || [NoteName] → [Integer]
+(define (note->num n)
+  ;; note->num :: NoteName → Integer || [NoteName] → [Integer]
   (map+ (λ (e) (r:index-where (curry true?)
                               (map (curry r:index-of e) allNotes)))
         n))
@@ -90,26 +87,28 @@
              (eq? #\b (string-ref base-note 1)))
         (map last lst)
         (map first lst))))
+
+(define num->note* (compose (collapse 'C) num->note))
  
 ;;-----------------------
 ;; Define better wrappers
 
-(define/c (wrap* f x)
-  ;; Wrap note->num* and num->note*
-  ;; e.g. (wrap* (transpose 2) '(C D E)) => '(D E F#)
-  ;;      (wrap* maj2 'G) => '(G A B D)
-  ((compose1 (collapse 'C)
-            num->note*
-            f
-            note->num*) x))
+(define (wrap f x)
+  ;; Wrap note->num and num->note
+  ;; e.g. (wrap (transpose 2) '(C D E)) => '(D E F#)
+  ;;      (wrap maj2 'G) => '(G A B D)
+  (~>> x
+       note->num
+       f
+       num->note*))
 
-(define/c (wrapl* f x)
+(define/c (wrapl f x)
   ;; Wrap a function that returns a list
-  ;; e.g. (wrap* inversions '(C E G)) => '((G C E) (C E G) (E G C))
-  ((compose1 (r:map (collapse 'C))
-            (r:map num->note*)
-            f
-            note->num*) x))
+  ;; e.g. (wrap inversions '(C E G)) => '((G C E) (C E G) (E G C))
+  (~>> x
+       note->num
+       f
+       (r:map num->note*)))
 
 ;;-----------------------
 ;; Define a chord as a list of intervals from the base note. It returns a
@@ -124,6 +123,25 @@
 ;; Define chords as functions operating on a note number
 (define-syntax-rule (defchord name ns)
   (define name (chord ns)))
+
+(define chords
+  (hash 'minor   '(0 3 7)
+        'x4+5    '(0 5 7)
+        'x7      '(0 4 7 10)
+        'maj7    '(0 4 7 11)
+        'min7    '(0 3 7 10)
+        'maj9    '(0 4 7 14)
+        'min9    '(0 3 7 14)
+        'maj7+9  '(0 4 7 11 14)
+        'min7+9  '(0 3 7 10 14)
+        'maj6    '(0 4 9)
+        'min6    '(0 3 9)
+        'aug     '(0 4 8)
+        'maj2    '(0 2 4 7)
+        'min2    '(0 2 3 7)
+        'dim     '(0 3 6)
+        'maj4    '(0 4 5)
+        'min4    '(0 3 5)))
 
 (defchord major   '(0 4 7))
 (defchord minor   '(0 3 7))
@@ -147,20 +165,21 @@
 (define (c* note ch)
   ;; Syntactic sugar
   ;; (c* 'E maj2) => '(4 6 8 11)
-  (ch (note->num* note)))
+  (ch (note->num note)))
 
 (define main-chords
   ;; main-chords :: [Chord]
   (list major minor x7 maj7 min7))
 
 (define all-chords
+  ;; all-chords :: [Chord]
   (list major minor x4+5 x7 maj7 min7 maj9 min9 maj7+9
         min7+9 maj6 min6 aug maj2 min2 dim maj4 min4))
 
 (define show-main-chords
-  ;; Show all the main chords
+  ;; Show all the main chords as applied to a note
   ;; e.g. (show-main-chords 'F#) => '((F# A# C#) (F# A C#) (F# A# C# E) (F# A# C# F) (F# A C# E))
-  (wrapl* (r:juxt main-chords)))
+  (wrapl (r:juxt main-chords)))
 
 (define (match-chord lst)
   ;; Match note numbers to one or more chord names
@@ -176,8 +195,8 @@
 ;;----------------
 ;; Example usage of the above functions
 
-;; (wrap* (compose (transpose 2) min7) 'G)
-;; (wrapl* (compose inversions min6 'E))
+;; (wrap (compose (transpose 2) min7) 'G)
+;; (wrapl (compose inversions min6) 'E)
 ;; (show-main-chords 'D)
 
 ;;----------------

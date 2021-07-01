@@ -37,7 +37,7 @@
 ;;----------------
 (define (draw-notes r base-shape)
   ;; Draw the points around the circumference
-  (let ([note (circle 4 "solid" (color 100 100 255 255))])
+  (let ([note (circle 4 "solid" "dodgerblue")])
     (foldl (λ (i result)
              (let ([loc (xy r i)])
                (overlay/offset result (pt-x loc) (pt-y loc) note)))
@@ -45,10 +45,11 @@
            (range 0 12))))
 
 (define (draw-first-note n r base-shape)
+  ;; Highlight the first note in the chord
   (let ([loc (xy r n)])
     (overlay/offset base-shape
                     (pt-x loc) (pt-y loc)
-                    (circle 4 "solid" "green"))))
+                    (circle 6 "solid" "aqua"))))
 
 (define (draw-chord ch r base-shape)
   ;; Draw a closed set of lines that corresponds to the chord
@@ -70,7 +71,7 @@
          [base (circle r "outline" "white")])
     (~>> base
          (draw-first-note (first ch) r)
-         (draw-notes r)
-         (draw-chord ch r))))
+         (draw-chord ch r)
+         (draw-notes r))))
 
 ;; The End
