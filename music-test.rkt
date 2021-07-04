@@ -31,13 +31,13 @@
              (check-equal? (canonical '(6 2 8)) '(0 4 6)))
 
   (test-case "num->note"
-             (check-equal? (num->note* '(1 3 4)) '((C# Db) (D# Eb) (E))))
+             (check-equal? (num->note '(1 3 4)) '((C# Db) (D# Eb) (E))))
 
   (test-case "note->num"
-             (check-equal? (note->num* 'Ab) 8))
+             (check-equal? (note->num 'Ab) 8))
 
   (test-case "collapse"
-             (define x (num->note* '(0 3 8)))
+             (define x (num->note '(0 3 8)))
              (check-equal? (collapse 'Db x) '(C Eb Ab))
              (check-equal? (collapse 'C# x) '(C D# G#)))
 
@@ -45,8 +45,8 @@
              (check-equal? (sorted-num->note '(4 2 0)) '(C D E)))
 
   (test-case "Wrapped functions"
-             (check-equal? (wrap* (transpose 2) '(C E G)) '(D F# A))
-             (check-equal? (wrap* maj2 'G) '(G A B D)))
+             (check-equal? (wrap (transpose 2) '(C E G)) '(D F# A))
+             (check-equal? (c* 'G 'maj2) '(G A B D)))
   
   )
 

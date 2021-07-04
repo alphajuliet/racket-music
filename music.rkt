@@ -4,9 +4,7 @@
 ;; AJ 2017-04-28
 
 (require threading
-         ;; rsound
          define-with-spec
-         ;; 2htdp/image
          rakeda
          "visual.rkt")
 
@@ -88,12 +86,14 @@
         (map last lst)
         (map first lst))))
 
-(define num->note* (compose (collapse 'C) num->note))
+(define num->note*
+  ;; Collapse the note options
+  (compose (collapse 'C) num->note))
  
 ;;-----------------------
 ;; Define better wrappers
 
-(define (wrap f x)
+(define/c (wrap f x)
   ;; Wrap note->num and num->note
   ;; e.g. (wrap (transpose 2) '(C D E)) => '(D E F#)
   ;;      (wrap maj2 'G) => '(G A B D)
@@ -111,21 +111,12 @@
        (r:map num->note*)))
 
 ;;-----------------------
-;; Define a chord as a list of intervals from the base note. It returns a
-;; function that takes a given base note number and returns the chord of note numbers.
-;; define Chord = Integer → [Integer]
-
-(define (chord ns)
-  ;; chord :: [Integer] → Chord
-  ;; e.g. (maj6 4) => '(4 8 1)
-  (λ (n) (r:map (transpose n) ns)))
-
-;; Define chords as functions operating on a note number
-(define-syntax-rule (defchord name ns)
-  (define name (chord ns)))
+;; Define a chord as a list of intervals from the base note.
 
 (define chords
-  (hash 'minor   '(0 3 7)
+  ;; Define chords as a hash for reverse lookups
+  (hash 'major   '(0 4 7)
+        'minor   '(0 3 7)
         'x4+5    '(0 5 7)
         'x7      '(0 4 7 10)
         'maj7    '(0 4 7 11)
@@ -141,45 +132,25 @@
         'min2    '(0 2 3 7)
         'dim     '(0 3 6)
         'maj4    '(0 4 5)
-        'min4    '(0 3 5)))
+        'min4    '(0 3 5)
+        'maj4+6  '(0 4 5 9)
+        'min4+6  '(0 3 5 9)))
 
-(defchord major   '(0 4 7))
-(defchord minor   '(0 3 7))
-(defchord x4+5    '(0 5 7))
-(defchord x7      '(0 4 7 10))
-(defchord maj7    '(0 4 7 11))
-(defchord min7    '(0 3 7 10))
-(defchord maj9    '(0 4 7 14))
-(defchord min9    '(0 3 7 14))
-(defchord maj7+9  '(0 4 7 11 14))
-(defchord min7+9  '(0 3 7 10 14))
-(defchord maj6    '(0 4 9))
-(defchord min6    '(0 3 9))
-(defchord aug     '(0 4 8))
-(defchord maj2    '(0 2 4 7))
-(defchord min2    '(0 2 3 7))
-(defchord dim     '(0 3 6))
-(defchord maj4    '(0 4 5))
-(defchord min4    '(0 3 5))
-
-(define (c* note ch)
-  ;; Syntactic sugar
-  ;; (c* 'E maj2) => '(4 6 8 11)
-  (ch (note->num note)))
+(define/c (c* note ch)
+  ;; Define c* in terms of the hash
+  (let ([n (note->num note)])
+    (num->note* (r:map (transpose n) (hash-ref chords ch)))))
 
 (define main-chords
   ;; main-chords :: [Chord]
-  (list major minor x7 maj7 min7))
+  (list 'major 'minor 'x7 'maj7 'min7))
 
 (define all-chords
   ;; all-chords :: [Chord]
-  (list major minor x4+5 x7 maj7 min7 maj9 min9 maj7+9
-        min7+9 maj6 min6 aug maj2 min2 dim maj4 min4))
+  (hash-keys chords))
 
-(define show-main-chords
-  ;; Show all the main chords as applied to a note
-  ;; e.g. (show-main-chords 'F#) => '((F# A# C#) (F# A C#) (F# A# C# E) (F# A# C# F) (F# A C# E))
-  (wrapl (r:juxt main-chords)))
+(define (apply-chord chs note)
+  (map+ (compose num->note* (c* note)) chs))
 
 (define (match-chord lst)
   ;; Match note numbers to one or more chord names
