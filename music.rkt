@@ -21,6 +21,13 @@
       (r:map f x)
       (apply f (list x))))
 
+(define/c (map++ f lst)
+  ;; Generic map across a list or list of lists
+  (if (and~> lst first list?)
+      (map f lst)
+      ;; else
+      (f lst)))
+
 (define list-min
   ;; Minimum value of a list
   ;; list-min :: Sortable a ⇒ [a] → a
@@ -29,6 +36,15 @@
 (define mod12
   ;; Modulo 12
   (r:flip modulo 12))
+
+(define (hash-lookup h value)
+  ;; Return the first key that has the given value, otherwise #f
+  ;; hash-lookup :: (Hash k v) -> v -> k
+  (let ([lst (filter (λ (k) (equal? value (hash-ref h k)))
+                     (hash-keys h))])
+    (if (empty? lst)
+        #f
+        (first lst))))
 
 ;;-----------------------
 (define/c (transpose n x)
@@ -39,6 +55,9 @@
 (define/c (invert n x)
   ;; Invert modulo 12
   (map+ (compose1 mod12 (r:- n)) x))
+
+(define/c (invert* n x)
+  (map+ (r:- n) x))
 
 (define/spec (canonical ch)
   ;; Canonical structure of a list
@@ -76,15 +95,16 @@
                               (map (curry r:index-of e) allNotes)))
         n))
 
-(define/c (collapse note lst)
-  ;; Collapse a list of note lists based on the given note
+(define/c (collapse ref note)
+  ;; Collapse notes based on the given reference note
   ;; C# -> D#, F#..., but Db -> Eb, Gb...
   ;; e.g. (collapse 'Eb '((C# Db) (F# Gb) (B))) => '(Db Gb B)
-  (let* ([base-note (symbol->string note)])
-    (if (and (= 2 (string-length base-note))
-             (eq? #\b (string-ref base-note 1)))
-        (map last lst)
-        (map first lst))))
+  (let ([ref-note (symbol->string ref)])
+    (if (and ((string-length ref-note) . = . 2)
+             (eq? #\b (string-ref ref-note 1)))
+        (map++ last note)
+        ;; else
+        (map++ first note))))
 
 (define num->note*
   ;; Collapse the note options
@@ -136,12 +156,17 @@
         'maj4+6  '(0 4 5 9)
         'min4+6  '(0 3 5 9)))
 
-(define/c (c* note ch)
-  ;; Define c* in terms of the hash
+(define (c note ch)
+  ;; Retun the note numbers for the given chord
   (let ([n (note->num note)])
-    (num->note* (r:map (transpose n) (hash-ref chords ch)))))
+    (r:map (transpose n) (hash-ref chords ch))))
+
+(define c*
+  ;; Return the chord as note names
+  (compose num->note* c))
 
 (define main-chords
+  ;; Just the important ones
   ;; main-chords :: [Chord]
   (list 'major 'minor 'x7 'maj7 'min7))
 
@@ -149,7 +174,8 @@
   ;; all-chords :: [Chord]
   (hash-keys chords))
 
-(define (apply-chord chs note)
+(define/c (apply-chord chs note)
+  ;; Show chords for a given base note.
   (map+ (compose num->note* (c* note)) chs))
 
 (define (match-chord lst)
@@ -158,6 +184,14 @@
   ;; @@TODO
   (let ([x (map canonical (permutations lst))])
     #f))
+
+(define (lookup-chord ch)
+  ;; Do a reverse lookup of a chord name based on note numbers
+  ;; lookup-chord :: [Integer] -> (NoteName Chord)
+  (let* ([n (first ch)]
+        [base (num->note* n)]
+        [c (transpose (- n) ch)])
+    (list base (hash-lookup chords c))))
 
 (define (inversions ch)
   ;; Show all inversions of a chord
@@ -173,7 +207,7 @@
 ;;----------------
 ;; Define the PLR group of functions on triads from Neo-Riemannian Theory
 ;; (see Wikipedia entry at https://en.wikipedia.org/wiki/Neo-Riemannian_theory).
-;; - P is an involution (i.e. a permutation with maximum cycle length 2) between the major and
+;; - P is an involution (i.e. a permutation with cycle length 2) between the major and
 ;;   minor triad of the same root: P(Cmaj) = Cmin
 ;; - R is an involution between relative major and minor triads: R(Cmaj) = Amin
 ;; - L doesn't have a recognised musical mapping: L(Cmaj) = Emin
