@@ -47,12 +47,8 @@
     (check-equal? (collapse 'C# x) '(C D# G#)))
 
   (test-case "Wrapped functions"
-    (check-equal? (wrap (transpose 2) '(C E G)) '(D F# A))
-    (check-equal? (c* 'G 'maj2) '(G A B D)))
+    (check-equal? (wrap (transpose 2) '(C E G)) '(D F# A)))
 
-  (test-case "Reverse chord lookup"
-    (check-equal? (lookup-chord '(C E G)) '(C major)))
-  
   )
 
 (run-tests music-tests)
