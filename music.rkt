@@ -57,13 +57,15 @@
 (define/c (invert* n x)
   (map+ (r:- n) x))
 
+(define (canonical* ch)
+  (map+ (transpose (- (list-min ch))) ch))
+
 (define/spec (canonical ch)
   ;; Canonical structure of a list
   ;; e.g (canonical '(2 6 8)) -> '(0 4 6), i.e. this is a major chord
   ;; canonical :: Sortable a ⇒ [a] → [a]
   (-> (listof integer?) (listof integer?))
-  (r:sort <
-   (map+ (transpose (- (list-min ch))) ch)))
+  (r:sort < (canonical* ch)))
 
 ;;-----------------------
 ;; Musical data structures and conversions

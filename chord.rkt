@@ -65,8 +65,8 @@
   ;; Do a reverse lookup of a chord name based on note numbers
   ;; lookup-chord :: [Integer] -> (NoteName Chord)
   (let* ([n (first ch)]
-        [base (num->note* n)]
-        [c (transpose (- n) ch)])
+         [base (num->note* n)]
+         [c (transpose (- n) ch)])
     (list base (hash-lookup chords c))))
 
 (define (inversions ch)
