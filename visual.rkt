@@ -5,6 +5,7 @@
 ;; Imports and exports
 
 (require threading
+         "chord.rkt"
          2htdp/image)
 
 (provide view-chord)
@@ -52,9 +53,8 @@
                     (circle 6 "solid" "aqua"))))
 
 (define (draw-chord ch r base-shape)
-  ;; Draw a closed set of lines that corresponds to the chord
-  (let ([pts (append ch (list (first ch)))]
-        [origin (pt r r)])
+  ;; Draw a series of lines that corresponds to the chord
+  (let ([origin (pt r r)])
     (foldl (λ (p result)
              (let ([a (pt+ origin (xy r (first p)))]
                    [b (pt+ origin (xy r (second p)))])
@@ -63,15 +63,16 @@
                          (pt-x b) (pt-y b)
                          (color 255 127 127 255))))
            base-shape
-           (pairs pts))))
+           (pairs ch))))
 
 (define (view-chord ch)
   ;; Plot a chord on a circle
   (let* ([r 100]
+         [note-nums (chord->num ch)]
          [base (circle r "outline" "white")])
     (~>> base
-         (draw-first-note (first ch) r)
-         (draw-chord ch r)
+         (draw-first-note (first note-nums) r)
+         (draw-chord note-nums r)
          (draw-notes r))))
 
 ;; The End
