@@ -23,13 +23,11 @@
 
   ;; Musical utilities
   (test-case "transpose"
-    (define tr10 (transpose 10))
+    (define tr10 (transpose* 10))
     (check-equal? (transpose 4 6) 10)
     (check-equal? (tr10 5) 3)
-    (check-equal? (transpose 8 '(0 4 7)) '(8 0 3)))
-
-  (test-case "canonical"
-    (check-equal? (canonical '(6 2 8)) '(0 4 6)))
+    (check-equal? (transpose 8 '(0 4 7)) '(8 12 15))
+    (check-equal? (transpose* 8 '(0 4 7)) '(8 0 3)))
 
   (test-case "num->note"
     (check-equal? (num->note '(1 3 4)) '((C# Db) (D# Eb) (E)))

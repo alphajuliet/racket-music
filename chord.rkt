@@ -4,6 +4,7 @@
 
 (require threading
          rakeda
+         ;; define-with-spec
          "music.rkt")
 
 (provide (all-defined-out))
@@ -37,14 +38,13 @@
         'maj9    '(0 4 7 11 14)
         'min9    '(0 3 7 10 14)
         'minmaj9 '(0 3 7 11 14)
+        'major+9 '(0 4 7 14) ; No 7th
+        'minor+9 '(0 3 7 14) ; No 7th
 
         'maj+2   '(0 2 4 7)
         'min+2   '(0 2 3 7)
         'maj4+6  '(0 4 5 9)
-        'min4+6  '(0 3 5 8)
-
-        'maj7+9  '(0 4 7 11 14)
-        'min7+9  '(0 3 7 10 14)))
+        'min4+6  '(0 3 5 8)))
 
 ;; All chord names
 (define chord-names (hash-keys chords))
@@ -59,8 +59,14 @@
             (values root name)))
 
 ;;-----------------------
+(define (canonical ch)
+  ;; Transpose a list down to start at 0
+  (map+ (transpose (- (list-min ch))) ch))
+
+;;-----------------------
 (define (chord->num ch)
-  ;; chord->notes :: Chord -> [Integer]
+  ;; Convert a chord back to note numbers
+  ;; chord->num :: Chord -> [Integer]
   (transpose (note->num (chord-root ch))
              (hash-ref chords (chord-name ch))))
 

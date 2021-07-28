@@ -4,7 +4,6 @@
 ;; AJ 2017-04-28
 
 (require threading
-         define-with-spec
          rakeda)
 
 (provide (all-defined-out))
@@ -46,26 +45,20 @@
 
 ;;-----------------------
 (define/curry (transpose n x)
+  ;; Transpose a note or chord
+  (map+ (r:+ n) x))
+
+(define/curry (transpose* n x)
   ;; Transpose a note or chord, modulo 12
-  ;; e.g. (transpose 2 '(0 3 7)) => '(2 5 9)
+  ;; e.g. (transpose* 14 '(0 3 7)) => '(2 5 9)
   (map+ (compose1 mod12 (r:+ n)) x))
 
 (define/curry (invert n x)
-  ;; Invert modulo 12
-  (map+ (compose1 mod12 (r:- n)) x))
-
-(define/curry (invert* n x)
   (map+ (r:- n) x))
 
-(define (canonical* ch)
-  (map+ (transpose (- (list-min ch))) ch))
-
-(define/spec (canonical ch)
-  ;; Canonical structure of a list
-  ;; e.g (canonical '(2 6 8)) -> '(0 4 6), i.e. this is a major chord
-  ;; canonical :: Sortable a ⇒ [a] → [a]
-  (-> (listof integer?) (listof integer?))
-  (r:sort < (canonical* ch)))
+(define/curry (invert* n x)
+  ;; Invert modulo 12
+  (map+ (compose1 mod12 (r:- n)) x))
 
 ;;-----------------------
 ;; Musical data structures and conversions
@@ -85,10 +78,6 @@
   '((C) (C# Db) (D) (D# Eb) (E) (F) (F# Gb) (G) (G# Ab) (A) (A# Bb) (B)))
 
 ;;-----------------------
-(define num->note
-  ;; num->note :: [Integer] → [[NoteName]] || Integer → [NoteName]
-  (map+ (compose1 (r:flip r:nth allNotes) mod12)))
-
 (define (note->num n)
   ;; note->num :: NoteName → Integer || [NoteName] → [Integer]
   (map+ (λ (e) (r:index-where (curry true?)
@@ -105,6 +94,10 @@
         (map++ last note)
         ;; else
         (map++ first note))))
+
+(define num->note
+  ;; num->note :: [Integer] → [[NoteName]] || Integer → [NoteName]
+  (map+ (compose1 (r:flip r:nth allNotes) mod12)))
 
 (define num->note*
   ;; Collapse the note options
