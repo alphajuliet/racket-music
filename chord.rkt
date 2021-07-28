@@ -1,83 +1,94 @@
 #lang racket
 ;; chord.rkt
+;; Explorations in chord syntax
 
-(require rakeda
+(require threading
+         rakeda
          "music.rkt")
 
 (provide (all-defined-out))
 
 ;;-----------------------
-;; Define a chord as a list of intervals from the base note.
-
 (define chords
-  ;; Define chords as a hash for reverse lookups
   (hash 'major   '(0 4 7)
         'minor   '(0 3 7)
-        'x4+5    '(0 5 7)
-        'x7      '(0 4 7 10)
-        'maj7    '(0 4 7 11)
-        'min7    '(0 3 7 10)
-        'maj9    '(0 4 7 14)
-        'min9    '(0 3 7 14)
-        'maj7+9  '(0 4 7 11 14)
-        'min7+9  '(0 3 7 10 14)
-        'maj6    '(0 4 9)
-        'min6    '(0 3 9)
-        'aug     '(0 4 8)
-        'maj2    '(0 2 4 7)
-        'min2    '(0 2 3 7)
         'dim     '(0 3 6)
+        'aug     '(0 4 8)
+        'x4+5    '(0 5 7)
         'maj4    '(0 4 5)
         'min4    '(0 3 5)
+        'maj6    '(0 4 9) ; minor 1st inv
+        'min6    '(0 3 8) ; major 1st inv
+        'aug4    '(0 5 8) ; minor 2nd inv
+        'x4+6    '(0 5 9) ; major 2nd inv
+
+        ;; Sevenths
+        'x7      '(0 4 7 10) ; dominant 7th
+        'maj7    '(0 4 7 11)
+        'aug7    '(0 4 8 10)
+        'augmaj7 '(0 4 8 11)
+        'min7    '(0 3 7 10)
+        'minmaj7 '(0 3 7 11)
+        'dim7    '(0 3 6 9)
+        'dimmin7 '(0 3 6 10) ; half-diminished 7th
+
+        ;; Ninths
+        'x9      '(0 4 7 10 14) ; dominant 9th
+        'maj9    '(0 4 7 11 14)
+        'min9    '(0 3 7 10 14)
+        'minmaj9 '(0 3 7 11 14)
+
+        'maj+2   '(0 2 4 7)
+        'min+2   '(0 2 3 7)
         'maj4+6  '(0 4 5 9)
-        'min4+6  '(0 3 5 9)))
+        'min4+6  '(0 3 5 8)
 
-(define (c note ch)
-  ;; Return the note numbers for the given chord
-  (let ([n (note->num note)])
-    (r:map (transpose n) (hash-ref chords ch))))
+        'maj7+9  '(0 4 7 11 14)
+        'min7+9  '(0 3 7 10 14)))
 
-(define c*
-  ;; Return the chord as note names
-  (compose num->note* c))
+;; All chord names
+(define chord-names (hash-keys chords))
 
-(define main-chords
-  ;; Just the important ones
-  ;; main-chords :: [Chord]
-  (list 'major 'minor 'x7 'maj7 'min7))
+;; Define the chord type
+(struct chord (root name)
+  #:transparent
+  #:guard (λ (root name _)
+            (unless (and (r:contains? root (flatten allNotes))
+                         (r:contains? name chord-names))
+              (error "Invalid fields: (chord <root> <name>)"))
+            (values root name)))
 
-(define all-chords
-  ;; all-chords :: [Chord]
-  (hash-keys chords))
+;;-----------------------
+(define (chord->num ch)
+  ;; chord->notes :: Chord -> [Integer]
+  (transpose (note->num (chord-root ch))
+             (hash-ref chords (chord-name ch))))
 
-(define/c (apply-chord chs note)
-  ;; Show chords for a given base note.
-  (map+ (compose num->note* (c* note)) chs))
-
-(define (match-chord lst)
-  ;; Match note numbers to one or more chord names
-  ;; This will do a match across all the given chords
-  ;; @@TODO
-  (let ([x (map canonical (permutations lst))])
-    #f))
-
-(define (lookup-chord ch)
+(define (num->chord ch)
   ;; Do a reverse lookup of a chord name based on note numbers
-  ;; lookup-chord :: [Integer] -> (NoteName Chord)
+  ;; If not recognised then just return the note names
+  ;; lookup-chord :: [Integer] -> Chord
   (let* ([n (first ch)]
-         [base (num->note* n)]
-         [c (transpose (- n) ch)])
-    (list base (hash-lookup chords c))))
+         [root (num->note* n)]
+         [c (transpose (- n) ch)]
+         [name (hash-lookup chords c)])
+    (if (false? name)
+        (num->note* ch)
+        (chord root name))))
 
-(define (inversions ch)
+(define chord->notes (compose1 num->note* chord->num))
+
+;;-----------------------
+(define (inversions notes)
   ;; Show all inversions of a chord
-  (r:nest-list r:rotate-left (length ch) ch))
+  (r:iterate r:rotate-left (sub1 (length notes)) notes))
 
-;;----------------
-;; Example usage of the above functions
+(define/curry (wrapc f ch)
+  ;; Wrap a function that returns a list
+  ;; e.g. (wrapc inversions (chord 'C 'major)) => '((chord 'E 'x4+6) (chord 'A 'major) (chord 'C# 'min6))
+  (~>> ch
+       chord->num
+       f
+       (r:map num->chord)))
 
-;; (wrap (compose (transpose 2) min7) 'G)
-;; (wrapl (compose inversions min6) 'E)
-;; (show-main-chords 'D)
-;;
 ;; The End

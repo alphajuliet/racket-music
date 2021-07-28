@@ -12,7 +12,7 @@
 ;;-----------------------
 ;; Utility functions
 
-(define/c (map+ f x)
+(define/curry (map+ f x)
   ;; Generic map that is polymorphic across lists and values
   ;; map+ :: (a → b) → a → b
   ;; map+ :: (a → b) → [a] → [b]
@@ -20,7 +20,7 @@
       (r:map f x)
       (f x)))
 
-(define/c (map++ f lst)
+(define/curry (map++ f lst)
   ;; Generic map across a list or list of lists
   (if (and~> lst first list?)
       (map f lst)
@@ -45,16 +45,16 @@
         (first lst))))
 
 ;;-----------------------
-(define/c (transpose n x)
+(define/curry (transpose n x)
   ;; Transpose a note or chord, modulo 12
   ;; e.g. (transpose 2 '(0 3 7)) => '(2 5 9)
   (map+ (compose1 mod12 (r:+ n)) x))
 
-(define/c (invert n x)
+(define/curry (invert n x)
   ;; Invert modulo 12
   (map+ (compose1 mod12 (r:- n)) x))
 
-(define/c (invert* n x)
+(define/curry (invert* n x)
   (map+ (r:- n) x))
 
 (define (canonical* ch)
@@ -95,7 +95,7 @@
                               (map (curry r:index-of e) allNotes)))
         n))
 
-(define/c (collapse ref note)
+(define/curry (collapse ref note)
   ;; Collapse notes based on the given reference note
   ;; C# -> D#, F#..., but Db -> Eb, Gb...
   ;; e.g. (collapse 'Eb '((C# Db) (F# Gb) (B))) => '(Db Gb B)
@@ -113,7 +113,7 @@
 ;;-----------------------
 ;; Define better wrappers
 
-(define/c (wrap f x)
+(define/curry (wrap f x)
   ;; Wrap note->num and num->note
   ;; e.g. (wrap (transpose 2) '(C D E)) => '(D E F#)
   ;;      (wrap maj2 'G) => '(G A B D)
@@ -122,7 +122,7 @@
        f
        num->note*))
 
-(define/c (wrapl f x)
+(define/curry (wrapl f x)
   ;; Wrap a function that returns a list
   ;; e.g. (wrapl inversions '(C E G)) => '((G C E) (C E G) (E G C))
   (~>> x
