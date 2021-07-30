@@ -10,6 +10,22 @@
 (provide (all-defined-out))
 
 ;;-----------------------
+;; Utilities
+
+(define (select-keys h ks)
+  ;; Return the hash entries that just contain the given keys
+  ;; select-keys :: Hash k v -> [k] -> Hash k v
+  (for/hash ([k ks])
+    (values k (hash-ref h k))))
+
+(define (hash-map f h)
+  ;; Do mapping over all values in a hash and return a new hash.
+  ;; hash-map :: (a -> b -> c) -> Hash a b -> Hash a c
+  (for/fold ([h-out (make-immutable-hash)])
+            ([(k v) (in-hash h)])
+    (hash-set h-out k (f k v))))
+
+;;-----------------------
 (define chords
   (hash 'major   '(0 4 7)
         'minor   '(0 3 7)
@@ -48,12 +64,14 @@
 
 ;; All chord names
 (define chord-names (hash-keys chords))
+;; The main chords I'm interested in
+(define my-chords '(major minor maj7 min7 maj9 min9))
 
 ;; Define the chord type
 (struct chord (root name)
   #:transparent
   #:guard (λ (root name _)
-            (unless (and (r/in? root (flatten allNotes))
+            (unless (and (r/in? root (flatten all-notes))
                          (r/in? name chord-names))
               (error "Invalid fields: (chord <root> <name>)"))
             (values root name)))
@@ -83,6 +101,8 @@
         (chord root name))))
 
 (define chord->notes (compose1 num->note* chord->num))
+(define chord->notes* (compose1 num->note chord->num))
+(define (list->chord lst) (chord (first lst) (last lst)))
 
 ;;-----------------------
 (define (inversions notes)
@@ -96,5 +116,16 @@
        chord->num
        f
        (r/map num->chord)))
+
+(define (contains-note? ch n)
+  ;; Does a chord contain the given note?
+  ;; common-note :: [Chord] -> Note -> Boolean
+  (r/in? n (flatten (chord->notes* ch))))
+
+(define (chord-contains note)
+  ;; Which of my chords contain this note
+  ;; chord-contains :: Note -> [Chord]
+  (let ([ch (map list->chord (cartesian-product note-names my-chords))])
+    (filter (r/flip contains-note? note) ch)))
 
 ;; The End

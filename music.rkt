@@ -67,13 +67,13 @@
   ;; scale :: [Integer]
   (range 0 12))
 
-(define noteNames
+(define note-names
   ;; Note names, using my favourite mix of sharps and flats
   ;; define NoteName = Symbol
   ;; noteNames :: [NoteNames]
   '(C C# D Eb E F F# G Ab A Bb B))
 
-(define allNotes
+(define all-notes
   ;; Comprehensive list of note names
   '((C) (C# Db) (D) (D# Eb) (E) (F) (F# Gb) (G) (G# Ab) (A) (A# Bb) (B)))
 
@@ -81,7 +81,7 @@
 (define (note->num n)
   ;; note->num :: NoteName → Integer || [NoteName] → [Integer]
   (map+ (λ (e) (r/index-where (curry true?)
-                              (map (curry r/index-of e) allNotes)))
+                              (map (curry r/index-of e) all-notes)))
         n))
 
 (define/curry (collapse ref note)
@@ -97,7 +97,7 @@
 
 (define num->note
   ;; num->note :: [Integer] → [[NoteName]] || Integer → [NoteName]
-  (map+ (compose1 (r/flip r/nth allNotes) mod12)))
+  (map+ (compose1 (r/flip r/nth all-notes) mod12)))
 
 (define num->note*
   ;; Collapse the note options
