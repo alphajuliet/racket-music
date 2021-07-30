@@ -53,8 +53,8 @@
 (struct chord (root name)
   #:transparent
   #:guard (λ (root name _)
-            (unless (and (r:contains? root (flatten allNotes))
-                         (r:contains? name chord-names))
+            (unless (and (r/in? root (flatten allNotes))
+                         (r/in? name chord-names))
               (error "Invalid fields: (chord <root> <name>)"))
             (values root name)))
 
@@ -87,7 +87,7 @@
 ;;-----------------------
 (define (inversions notes)
   ;; Show all inversions of a chord
-  (r:iterate r:rotate-left (sub1 (length notes)) notes))
+  (r/iterate r/rotate-left (sub1 (length notes)) notes))
 
 (define/curry (wrapc f ch)
   ;; Wrap a function that returns a list
@@ -95,6 +95,6 @@
   (~>> ch
        chord->num
        f
-       (r:map num->chord)))
+       (r/map num->chord)))
 
 ;; The End

@@ -16,7 +16,7 @@
   ;; map+ :: (a → b) → a → b
   ;; map+ :: (a → b) → [a] → [b]
   (if (list? x)
-      (r:map f x)
+      (r/map f x)
       (f x)))
 
 (define/curry (map++ f lst)
@@ -29,10 +29,10 @@
 (define list-min
   ;; Minimum value of a list
   ;; list-min :: Sortable a ⇒ [a] → a
-  (r:argmin identity))
+  (r/argmin identity))
 
 (define mod12
-  (r:flip modulo 12))
+  (r/flip modulo 12))
 
 (define (hash-lookup h value)
   ;; Return the first key that has the given value, otherwise #f
@@ -46,19 +46,19 @@
 ;;-----------------------
 (define/curry (transpose n x)
   ;; Transpose a note or chord
-  (map+ (r:+ n) x))
+  (map+ (r/+ n) x))
 
 (define/curry (transpose* n x)
   ;; Transpose a note or chord, modulo 12
   ;; e.g. (transpose* 14 '(0 3 7)) => '(2 5 9)
-  (map+ (compose1 mod12 (r:+ n)) x))
+  (map+ (compose1 mod12 (r/+ n)) x))
 
 (define/curry (invert n x)
-  (map+ (r:- n) x))
+  (map+ (r/- n) x))
 
 (define/curry (invert* n x)
   ;; Invert modulo 12
-  (map+ (compose1 mod12 (r:- n)) x))
+  (map+ (compose1 mod12 (r/- n)) x))
 
 ;;-----------------------
 ;; Musical data structures and conversions
@@ -80,8 +80,8 @@
 ;;-----------------------
 (define (note->num n)
   ;; note->num :: NoteName → Integer || [NoteName] → [Integer]
-  (map+ (λ (e) (r:index-where (curry true?)
-                              (map (curry r:index-of e) allNotes)))
+  (map+ (λ (e) (r/index-where (curry true?)
+                              (map (curry r/index-of e) allNotes)))
         n))
 
 (define/curry (collapse ref note)
@@ -97,7 +97,7 @@
 
 (define num->note
   ;; num->note :: [Integer] → [[NoteName]] || Integer → [NoteName]
-  (map+ (compose1 (r:flip r:nth allNotes) mod12)))
+  (map+ (compose1 (r/flip r/nth allNotes) mod12)))
 
 (define num->note*
   ;; Collapse the note options
@@ -121,7 +121,7 @@
   (~>> x
        note->num
        f
-       (r:map num->note*)))
+       (r/map num->note*)))
 
 ;;----------------
 (displayln ":: Loaded musical definitions.")
