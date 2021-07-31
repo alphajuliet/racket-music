@@ -3,10 +3,10 @@
 ;; Define musical functions
 ;; AJ 2017-04-28
 
+(provide (all-defined-out))
+
 (require threading
          rakeda)
-
-(provide (all-defined-out))
 
 ;;-----------------------
 ;; Utility functions
@@ -42,6 +42,19 @@
     (if (empty? lst)
         #f
         (first lst))))
+
+(define (select-keys h ks)
+  ;; Return the hash entries that just contain the given keys
+  ;; select-keys :: Hash k v -> [k] -> Hash k v
+  (for/hash ([k ks])
+    (values k (hash-ref h k))))
+
+(define (hash-map f h)
+  ;; Do mapping over all values in a hash and return a new hash.
+  ;; hash-map :: (a -> b -> c) -> Hash a b -> Hash a c
+  (for/fold ([h-out (make-immutable-hash)])
+            ([(k v) (in-hash h)])
+    (hash-set h-out k (f k v))))
 
 ;;-----------------------
 (define/curry (transpose n x)
@@ -124,6 +137,6 @@
        (r/map num->note*)))
 
 ;;----------------
-(displayln ":: Loaded musical definitions.")
+;; (displayln ":: Loaded musical definitions.")
 
 ;; The End

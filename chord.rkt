@@ -2,28 +2,15 @@
 ;; chord.rkt
 ;; Explorations in chord syntax
 
+(provide (all-defined-out))
+
 (require threading
          rakeda
          ;; define-with-spec
          "music.rkt")
 
-(provide (all-defined-out))
-
 ;;-----------------------
 ;; Utilities
-
-(define (select-keys h ks)
-  ;; Return the hash entries that just contain the given keys
-  ;; select-keys :: Hash k v -> [k] -> Hash k v
-  (for/hash ([k ks])
-    (values k (hash-ref h k))))
-
-(define (hash-map f h)
-  ;; Do mapping over all values in a hash and return a new hash.
-  ;; hash-map :: (a -> b -> c) -> Hash a b -> Hash a c
-  (for/fold ([h-out (make-immutable-hash)])
-            ([(k v) (in-hash h)])
-    (hash-set h-out k (f k v))))
 
 ;;-----------------------
 (define chords
@@ -115,7 +102,16 @@
   (~>> ch
        chord->num
        f
-       (r/map num->chord)))
+       (map++ num->chord)))
+
+(define/curry (wrapc< f ch)
+  ;; A note-sorted version of wrapc
+  ;; e.g. (wrapc< P (chord 'C major)) => (chord 'C 'minor)
+  (~>> ch
+       chord->num
+       f
+       (map++ (r/sort <))
+       (map++ num->chord)))
 
 (define (contains-note? ch n)
   ;; Does a chord contain the given note?
@@ -124,8 +120,9 @@
 
 (define (chord-contains note)
   ;; Which of my chords contain this note
-  ;; chord-contains :: Note -> [Chord]
-  (let ([ch (map list->chord (cartesian-product note-names my-chords))])
+  ;; chord-contains :: Note -> [chord]
+  (let ([ch (map list->chord
+                 (cartesian-product note-names my-chords))])
     (filter (r/flip contains-note? note) ch)))
 
 ;; The End
