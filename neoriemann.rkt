@@ -2,7 +2,7 @@
 ;; neoriemann.rkt
 ;;
 ;; Define the PLR group of functions on triads from Neo-Riemannian Theory
-;; (see Wikipedia entry at https://en.wikipedia.org/wiki/Neo-Riemannian_theory).
+;; (e.g. see Wikipedia entry at https://en.wikipedia.org/wiki/Neo-Riemannian_theory).
 ;; - P is an involution (i.e. a permutation with cycle length 2) between the major and
 ;;   minor triad of the same root: P(Cmaj) = Cmin
 ;; - R is an involution between relative major and minor triads: R(Cmaj) = Amin
