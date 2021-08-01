@@ -49,13 +49,16 @@
         'maj4+6  '(0 4 5 9)
         'min4+6  '(0 3 5 8)))
 
-;; All chord names
-(define chord-names (hash-keys chords))
-;; The main chords I'm interested in
-(define my-chords '(major minor maj7 min7 maj9 min9))
+(define chord-names
+  (hash-keys chords))
 
-;; Define the chord type
+(define my-chords
+  ;; The main chords I'm interested in
+  '(major minor maj7 min7 maj9 min9))
+
 (struct chord (root name)
+  ;; Define the chord type
+  ;; type Chord
   #:transparent
   #:guard (λ (root name _)
             (unless (and (r/in? root (flatten all-notes))
@@ -120,9 +123,21 @@
 
 (define (chord-contains note)
   ;; Which of my chords contain this note
-  ;; chord-contains :: Note -> [chord]
+  ;; chord-contains :: Note -> [Chord]
   (let ([ch (map list->chord
                  (cartesian-product note-names my-chords))])
     (filter (r/flip contains-note? note) ch)))
+
+(define (related-chord ch #:change-root [chg-root #t])
+  ;; Pick a random chord with at least one note in common
+  ;; If `#:change-root` is true then it must have a different root note
+  ;; related-chord :: Chord (-> Boolean) -> Chord
+  (let ([note (r/random-element (chord->notes ch))])
+    (~>> note
+         chord-contains
+         (r/filter (if chg-root
+                       (λ (e) (r/not-eq? (chord-root e) (chord-root ch)))
+                       true))
+         r/random-element)))
 
 ;; The End
