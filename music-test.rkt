@@ -1,10 +1,10 @@
 #lang racket
-;; music-test.rkt
+;; core-test.rkt
 ;; Andrew 2018-06-24
 
 (require rackunit
          rackunit/text-ui
-         "music.rkt")
+         "core.rkt")
 
 (define-test-suite music-tests
 

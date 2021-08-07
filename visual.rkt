@@ -1,14 +1,15 @@
 #lang racket
+;; visual.rkt
 ;; Visualise chords on a circle
 
 ;;----------------
 ;; Imports and exports
 
+(provide view-chord)
+
 (require threading
          "chord.rkt"
          2htdp/image)
-
-(provide view-chord)
 
 ;;----------------
 ;; Utilities
