@@ -1,5 +1,5 @@
 #lang racket
-;; music.rkt
+;; core.rkt
 ;; Define musical functions
 ;; AJ 2017-04-28
 

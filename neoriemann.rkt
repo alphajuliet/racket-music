@@ -12,7 +12,7 @@
 (provide (all-defined-out))
 
 (require rakeda
-         "music.rkt"
+         "core.rkt"
          "chord.rkt")
 
 ;;-----------------------

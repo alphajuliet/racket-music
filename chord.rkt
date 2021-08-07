@@ -7,7 +7,7 @@
 (require threading
          rakeda
          ;; define-with-spec
-         "music.rkt")
+         "core.rkt")
 
 ;;-----------------------
 ;; Utilities
@@ -128,7 +128,7 @@
                  (cartesian-product note-names my-chords))])
     (filter (r/flip contains-note? note) ch)))
 
-(define (related-chord ch #:change-root [chg-root #t])
+(define (random-related-chord ch #:change-root [chg-root #t])
   ;; Pick a random chord with at least one note in common
   ;; If `#:change-root` is true then it must have a different root note
   ;; related-chord :: Chord (-> Boolean) -> Chord
