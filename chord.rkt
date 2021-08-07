@@ -66,6 +66,11 @@
               (error "Invalid fields: (chord <root> <name>)"))
             (values root name)))
 
+(define (random-chord)
+  (let ([root (r/random-element note-names)]
+        [ch (r/random-element chord-names)])
+    (chord root ch)))
+
 ;;-----------------------
 (define (canonical ch)
   ;; Transpose a list down to start at 0
@@ -116,10 +121,10 @@
        (map++ (r/sort <))
        (map++ num->chord)))
 
-(define (contains-note? ch n)
+(define (contains-note? ch note)
   ;; Does a chord contain the given note?
   ;; common-note :: [Chord] -> Note -> Boolean
-  (r/in? n (flatten (chord->notes* ch))))
+  (r/in? note (flatten (chord->notes* ch))))
 
 (define (chord-contains note)
   ;; Which of my chords contain this note
@@ -139,5 +144,10 @@
                        (λ (e) (r/not-eq? (chord-root e) (chord-root ch)))
                        true))
          r/random-element)))
+
+(define (random-chords-with-note n note)
+  ;; Generate n chords with a common note
+  ;; random-chords-with-note :: Integer -> Note -> [Chord]
+  (r/repeatedly n (λ () (r/random-element (chord-contains note)))))
 
 ;; The End
