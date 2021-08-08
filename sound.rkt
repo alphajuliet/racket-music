@@ -32,7 +32,8 @@
            [saw-2 <= sawtooth-wave (+ (* f 0.997)
                                       (* 0.6 lfo1))]
            [env <= (my-adsr (sec 0.2) 1.0 (sec 0.3) 0.8 (sec 0.3) (sec 1.0))]
-           [out = (* 0.1 (+ saw-1 saw-2) env)]))
+           [mixer = (* 0.1 (+ saw-1 saw-2) env)]
+           [out <= lpf/dynamic 0.4 mixer]))
 
 (define (my-sine f)
   ;; Simple sine wave patch
