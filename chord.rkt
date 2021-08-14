@@ -20,11 +20,14 @@
         'aug     '(0 4 8)
         'x4+5    '(0 5 7)
         'maj4    '(0 4 5)
+        'sus4    '(0 5 7)
         'min4    '(0 3 5)
         'maj6    '(0 4 9) ; minor 1st inv
-        'min6    '(0 3 8) ; major 1st inv
+        'min6    '(0 3 9)
         'aug4    '(0 5 8) ; minor 2nd inv
         'x4+6    '(0 5 9) ; major 2nd inv
+        'b5      '(0 4 6)
+        'min#5   '(0 3 8)
 
         ;; Sevenths
         'x7      '(0 4 7 10) ; dominant 7th
@@ -35,6 +38,7 @@
         'minmaj7 '(0 3 7 11)
         'dim7    '(0 3 6 9)
         'dimmin7 '(0 3 6 10) ; half-diminished 7th
+        'x7b5    '(0 4 6 10)
 
         ;; Ninths
         'x9      '(0 4 7 10 14) ; dominant 9th
@@ -46,8 +50,10 @@
 
         'maj+2   '(0 2 4 7)
         'min+2   '(0 2 3 7)
+        'sus24   '(0 2 5 7)
         'maj4+6  '(0 4 5 9)
-        'min4+6  '(0 3 5 8)))
+        'min4+6  '(0 3 5 8)
+        'min+6   '(0 3 7 9)))
 
 (define chord-names
   (hash-keys chords))
@@ -144,6 +150,10 @@
                        (λ (e) (r/not-eq? (chord-root e) (chord-root ch)))
                        true))
          r/random-element)))
+
+(define (random-related-chords n)
+  ;; Return n related chords, where each chord contains at least one note from the preceding chord.
+  (r/iterate random-related-chord n (random-chord)))
 
 (define (random-chords-with-note n note)
   ;; Generate n chords with a common note
