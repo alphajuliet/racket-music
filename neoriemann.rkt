@@ -27,6 +27,7 @@
 (define R (curry involute 0 1))
 (define N (compose1 P L R))
 (define S (compose1 R P L))
+(define M (compose1 L R P))
 (define H (compose1 L P L))
 
 (define (nrt/compose fs ch)
