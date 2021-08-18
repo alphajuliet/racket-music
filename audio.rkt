@@ -4,7 +4,8 @@
 ;; AndrewJ 2018-06-02
 ;; See https://github.com/jbclements/RSound
 
-(provide (all-defined-out))
+(provide play-chord
+         play-scale)
 
 (require threading
          rsound
@@ -12,11 +13,12 @@
          rakeda
          "core.rkt"
          "chord.rkt"
+         "scale.rkt"
          "sound.rkt")
 
 ;; Convert time in seconds to samples
 (define (samples n)
-  (* n FRAME-RATE))
+  (round (* n FRAME-RATE)))
 
 ;; Beats per minute
 (define BPM 120)
@@ -57,11 +59,19 @@
       ;; else
       (NoteEvent note time dur)))
 
-(define (chord->midi ch (octave 3))
+(define (chord->midi ch [octave 3])
   ;; Turn a chord into a list of midi notes in the given octave.
-  ;; chord->note-list :: Chord -> [Natural]
+  ;; chord->midi :: Chord (-> Natural) -> [Natural]
   (let ([root-note (note->midi (Pitch (chord-root ch) octave))]
         [intervals (canonical (chord->num ch))])
+    (map (r/+ root-note) intervals)))
+
+
+(define (scale->midi sc [octave 3])
+  ;; Turn a scale into midi notes in the given octave
+  ;; scale->midi :: Scale (-> Natural) -> [Natural]
+  (let ([root-note (note->midi (Pitch (scale-root sc) octave))]
+        [intervals (scale->num sc)])
     (map (r/+ root-note) intervals)))
 
 ;; ---------------------
@@ -90,6 +100,14 @@
   ;; play-chord++ :: Signal -> Chord -> ()
   (play-notes sound (map+ (λ (m) (NoteEvent m start dur))
                           (chord->midi ch octave))))
+
+(define (play-scale sound sc [dur 0.3] [octave 3])
+  ;; Play a given scale, e.g. (play-scale saw2 (scale 'F 'minor))
+  ;; play-scale :: Signal -> Scale -> ()
+  (let ([midi (scale->midi sc octave)])
+    (play-notes sound (for/list ([m midi]
+                                 [i (in-range (length midi))])
+                        (NoteEvent m (* i dur) dur)))))
 
 ;; Make more responsive
 (collect-garbage)

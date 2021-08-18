@@ -76,7 +76,7 @@
 ;;-----------------------
 ;; Musical data structures and conversions
 
-(define scale
+#;(define scale
   ;; scale :: [Integer]
   (range 0 12))
 
