@@ -90,6 +90,12 @@
   ;; Comprehensive list of note names
   '((C) (C# Db) (D) (D# Eb) (E) (F) (F# Gb) (G) (G# Ab) (A) (A# Bb) (B)))
 
+(define (sharp-or-flat? note)
+  ;; sharp-or-flat? :: Note -> Boolean
+  (let ([str (symbol->string note)])
+    (or (string-suffix? str "#")
+        (string-suffix? str "b"))))
+
 ;;-----------------------
 (define (note->num n)
   ;; note->num :: NoteName → Integer || [NoteName] → [Integer]
@@ -103,7 +109,7 @@
   ;; e.g. (collapse 'Eb '((C# Db) (F# Gb) (B))) => '(Db Gb B)
   (let ([ref-note (symbol->string ref)])
     (if (and ((string-length ref-note) . = . 2)
-             (eq? #\b (string-ref ref-note 1)))
+             (string-suffix? ref-note "b"))
         (map++ last note)
         ;; else
         (map++ first note))))

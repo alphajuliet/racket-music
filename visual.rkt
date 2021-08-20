@@ -8,8 +8,10 @@
 (provide view-chord)
 
 (require threading
+         rakeda
          "chord.rkt"
-         2htdp/image)
+         2htdp/image
+         (prefix-in p: pict))
 
 ;;----------------
 ;; Utilities
@@ -31,7 +33,7 @@
       (+ (pt-y p1) (pt-y p2))))
 
 (define (xy r n)
-  ;; Translate r,n*pi/6 to x,y
+  ;; Translate (r, n*pi/6) to (x, y)
   (let ([θ (/ pi 6)])
     (pt (* r (cos (* (- n 3) θ)))
         (* r (sin (* (- n 3) θ))))))
@@ -53,6 +55,7 @@
                     (pt-x loc) (pt-y loc)
                     (circle 6 "solid" "aqua"))))
 
+;;----------------
 (define (draw-chord ch r base-shape)
   ;; Draw a series of lines that corresponds to the chord
   (let ([origin (pt r r)])
@@ -66,14 +69,32 @@
            base-shape
            (pairs ch))))
 
+;;----------------
 (define (view-chord ch)
   ;; Plot a chord on a circle
-  (let* ([r 100]
+  (let* ([radius 100]
          [note-nums (chord->num ch)]
-         [base (circle r "outline" "white")])
+         [base (circle radius "outline" "white")])
     (~>> base
-         (draw-first-note (first note-nums) r)
-         (draw-chord note-nums r)
-         (draw-notes r))))
+         (draw-first-note (first note-nums) radius)
+         (draw-chord note-nums radius)
+         (draw-notes radius))))
+
+;;----------------
+;; Draw a piano keyboard
+
+(define (draw-octave)
+  (let ([rw (p:filled-rectangle 20 100 #:color "white")]
+        [rb (p:filled-rectangle 12 60 #:color "black")])
+    (p:pin-over
+     (p:ht-append rw rw rw rw rw rw rw)
+     14 0
+     (p:pin-over
+      (p:ht-append 8 rb rb)
+      60 0
+      (p:ht-append 8 rb rb rb)))))
+
+(define (draw-piano (octaves 2))
+  (apply p:hc-append (build-list octaves (λ (_) (draw-octave)))))
 
 ;; The End
