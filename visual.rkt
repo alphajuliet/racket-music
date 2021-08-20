@@ -5,7 +5,8 @@
 ;;----------------
 ;; Imports and exports
 
-(provide view-chord)
+(provide view-chord
+         view-piano-chord)
 
 (require threading
          rakeda
@@ -96,5 +97,37 @@
 
 (define (draw-piano (octaves 2))
   (apply p:hc-append (build-list octaves (λ (_) (draw-octave)))))
+
+(define note-coords
+  ;; Coords of each note on the keyboard
+  (list (pt 5 80)   ; C
+        (pt 15 40)  ; C#/Db
+        (pt 25 80)  ; D
+        (pt 35 40)  ; D#/Eb
+        (pt 45 80)  ; E
+        (pt 65 80)  ; F
+        (pt 75 40)  ; F#/Gb
+        (pt 85 80)  ; G
+        (pt 95 40)  ; G#/Ab
+        (pt 105 80) ; A
+        (pt 115 40) ; A#/Bb
+        (pt 125 80))) ; B
+
+(define (piano-note num (base (draw-piano)))
+  ;; Draw a dot on the note number on the keyboard
+  (let* ([octave (quotient num 12)]
+         [note-num (remainder num 12)]
+         [xy (list-ref note-coords note-num)])
+    (p:pin-over base
+                (+ (pt-x xy) (* 140 octave)) (pt-y xy)
+                (p:filled-ellipse 10 10 #:color "cyan"))))
+
+(define (piano-notes note-list)
+  (foldl (λ (n acc) (piano-note n acc))
+         (draw-piano)
+         note-list))
+
+(define (view-piano-chord ch)
+  (piano-notes (chord->num ch)))
 
 ;; The End
