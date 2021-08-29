@@ -5,7 +5,9 @@
 ;; See https://github.com/jbclements/RSound
 
 (provide play-chord
-         play-scale)
+         play-scale
+         beats
+         BPM)
 
 (require threading
          rsound

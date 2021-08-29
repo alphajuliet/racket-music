@@ -45,15 +45,17 @@
         'maj9    '(0 4 7 11 14)
         'min9    '(0 3 7 10 14)
         'minmaj9 '(0 3 7 11 14)
-        'major+9 '(0 4 7 14) ; No 7th
-        'minor+9 '(0 3 7 14) ; No 7th
+        'add9    '(0 4 7 14) ; No 7th
+        'minadd9 '(0 3 7 14) ; No 7th
 
         'maj+2   '(0 2 4 7)
         'min+2   '(0 2 3 7)
+        'mixed3  '(0 3 4 7)
         'sus24   '(0 2 5 7)
         'maj4+6  '(0 4 5 9)
         'min4+6  '(0 3 5 8)
-        'min+6   '(0 3 7 9)))
+        'min+6   '(0 3 7 9)
+        'minaug7 '(0 3 8 11)))
 
 (define chord-names
   (hash-keys chords))
