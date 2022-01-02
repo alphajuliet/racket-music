@@ -21,7 +21,7 @@
 (define list-min
   ;; Minimum value of a list
   ;; list-min :: Sortable a ⇒ [a] → a
-  (r/argmin identity))
+  (curry apply min))
 
 (define mod12
   ;; mod12 :: Integer -> Integer
@@ -79,10 +79,6 @@
 ;;-----------------------
 ;; Musical data structures and conversions
 
-#;(define scale
-  ;; scale :: [Integer]
-  (range 0 12))
-
 (define note-names
   ;; Note names, using my favourite mix of sharps and flats
   ;; define Note = Symbol
@@ -128,27 +124,24 @@
   (compose (collapse 'C) num->note))
  
 ;;-----------------------
-;; Define better wrappers
-
+;; Map over note names
 (define/curry (map-note f x)
-  ;; Wrap note->num and num->note
-  ;; e.g. (wrap (transpose 2) '(C D E)) => '(D E F#)
-  ;; wrap :: (Integer -> Integer) -> [NoteName] -> NoteName
+  ;; Map a function on note numbers over note names
+  ;; e.g. (map-note (transpose 2) '(C D E)) => '(D E F#)
+  ;; e.g. (map-note inversions '(C E G)) => '((G C E) (C E G) (E G C))
+  ;; map-note :: (Integer -> Integer) -> [NoteName] -> NoteName
   (~>> x
-       note->num
+       (map+ note->num)
        f
-       num->note*))
+       (map+ num->note*)))
 
-(define/curry (map-note-list f x)
-  ;; Wrap a function that returns a list
-  ;; e.g. (wrapl inversions '(C E G)) => '((G C E) (C E G) (E G C))
-  ;; wrapl :: (Integer -> [Integer]) -> [NoteName] -> [NoteName]
+#;(define/curry (map-note-list f x)
+  ;; Lift map-note to work on lists
+  ;; e.g. (map-note-list inversions '(C E G)) => '((G C E) (C E G) (E G C))
+  ;; map-note-list :: (Integer -> [Integer]) -> [NoteName] -> [NoteName]
   (~>> x
        note->num
        f
        (r/map num->note*)))
-
-;;----------------
-;; (displayln ":: Loaded musical definitions.")
 
 ;; The End

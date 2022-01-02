@@ -34,7 +34,7 @@
   ;; Apply a chain of functions to a chord.
   ;; fs must be a real list, not a quoted form.
   ;; e.g. (nrt/compose (list P R) (chord 'C 'major)) => (chord 'A 'major)
-  (wrapc<
+  (map-chord<
    (apply compose1 fs) ch))
 
 ;; The End

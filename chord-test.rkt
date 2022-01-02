@@ -8,7 +8,7 @@
 
   (test-case "Chords"
              (check-equal? (chord->num (chord 'G 'maj+2)) '(7 9 11 14))
-             (check-equal? (chord->notes (chord 'G 'maj+2)) '(G A B D)))
+             (check-equal? (chord->notes* (chord 'G 'maj+2)) '(G A B D)))
 
   (test-case "Canonical"
              (check-equal? (canonical '(6 2 8)) '(4 0 6)))
@@ -22,7 +22,7 @@
              (check-equal? (contains-note? (chord 'A# 'major) 'E) #f)
              (check-equal? (contains-note? (chord 'C 'minor) 'Eb) #t)
              (check-equal? (contains-note? (chord 'C 'minor) 'D#) #t)
-             (check-equal? (length (chord-contains 'F)) 24)))
+             (check-equal? (length (chord-contains 'F)) 30)))
 
 (run-tests chord-test)
 ;; The End

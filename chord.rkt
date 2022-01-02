@@ -62,7 +62,7 @@
 
 (define my-chords
   ;; The main chords I'm interested in
-  '(major minor maj7 min7 maj9 min9))
+  '(major minor maj7 min7 maj9 min9 maj6 min6))
 
 (struct chord (root name)
   ;; Define the chord type
@@ -108,8 +108,8 @@
 (define note->chord
   (compose num->chord note->num))
 
-(define chord->notes (compose1 num->note* chord->num))
-(define chord->notes* (compose1 num->note chord->num))
+(define chord->notes (compose1 num->note chord->num))
+(define chord->notes* (compose1 num->note* chord->num))
 (define (list->chord lst) (chord (first lst) (last lst)))
 
 ;;-----------------------
@@ -134,7 +134,7 @@
 (define (contains-note? ch note)
   ;; Does a chord contain the given note?
   ;; common-note :: [Chord] -> NoteName -> Boolean
-  (r/in? note (flatten (chord->notes* ch))))
+  (r/in? note (flatten (chord->notes ch))))
 
 (define (chord-contains note)
   ;; Which of my chords contain this note

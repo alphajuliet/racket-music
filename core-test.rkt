@@ -46,9 +46,8 @@
     (check-equal? (collapse 'C# x) '(C D# G#)))
 
   (test-case "Wrapped functions"
-    (check-equal? (map-note (transpose 2) '(C E G)) '(D F# A)))
-
-  )
+    (check-equal? (map-note (transpose 2) '(C E G)) '(D F# A))
+    (check-equal? (length (map-note inversions '(C F A))) 3)))
 
 (run-tests music-tests)
 

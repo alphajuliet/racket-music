@@ -10,11 +10,11 @@
          "core.rkt"
          "chord.rkt"
          "neoriemann.rkt"
-         "audio.rkt"
-         "sound.rkt"
+         ;; "audio.rkt"
+         ;; "sound.rkt"
          "visual.rkt")
 
-(define (example-1 (note 'F))
+#;(define (example-1 (note 'F))
   ;; Play four related chords with a common note.
   (for ([n (in-range 4)]
         [ch (random-chords-with-note 4 note)])

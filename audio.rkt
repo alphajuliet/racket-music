@@ -119,6 +119,6 @@
 
 (define (ex1)
   ;; Play Fmaj7
-  (play-chord saw2 (chord 'E 'minor)))
+  (play-chord saw2 (chord 'E 'min7)))
 
 ;; The End
