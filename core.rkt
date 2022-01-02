@@ -11,14 +11,6 @@
 ;;-----------------------
 ;; Utility functions
 
-(define/curry (map+ f x)
-  ;; Generic map that is polymorphic across lists and values
-  ;; map+ :: (a → b) → a → b
-  ;; map+ :: (a → b) → [a] → [b]
-  (if (list? x)
-      (r/map f x)
-      (f x)))
-
 (define/curry (map++ f lst)
   ;; Generic map across a list or list of lists
   (if (and~> lst first list?)
@@ -32,6 +24,7 @@
   (r/argmin identity))
 
 (define mod12
+  ;; mod12 :: Integer -> Integer
   (r/flip modulo 12))
 
 (define (hash-lookup h value)
@@ -59,19 +52,29 @@
 ;;-----------------------
 (define/curry (transpose n x)
   ;; Transpose a note or chord
+  ;; transpose :: Integer -> Integer -> Integer
   (map+ (r/+ n) x))
 
 (define/curry (transpose* n x)
   ;; Transpose a note or chord, modulo 12
   ;; e.g. (transpose* 14 '(0 3 7)) => '(2 5 9)
+  ;; transpose* :: Integer -> Integer -> Integer
   (map+ (compose1 mod12 (r/+ n)) x))
 
 (define/curry (invert n x)
+  ;; invert :: Integer -> Integer -> Integer
   (map+ (r/- n) x))
 
 (define/curry (invert* n x)
   ;; Invert modulo 12
+  ;; invert* :: Integer -> Integer -> Integer
   (map+ (compose1 mod12 (r/- n)) x))
+
+(define (inversions notes)
+  ;; Show all inversions of note numbers
+  ;; inversions :: [Integer] -> [[Integer]]
+  ;; e.g. inversions (0 4 7) => ((0 4 7) (4 7 0) (7 0 4))
+  (r/iterate r/rotate-left (sub1 (length notes)) notes))
 
 ;;-----------------------
 ;; Musical data structures and conversions
@@ -82,16 +85,17 @@
 
 (define note-names
   ;; Note names, using my favourite mix of sharps and flats
-  ;; define NoteName = Symbol
-  ;; noteNames :: [NoteNames]
+  ;; define Note = Symbol
+  ;; note-names :: [NoteName]
   '(C C# D Eb E F F# G Ab A Bb B))
 
 (define all-notes
   ;; Comprehensive list of note names
+  ;; all-notes :: [[NoteName]]
   '((C) (C# Db) (D) (D# Eb) (E) (F) (F# Gb) (G) (G# Ab) (A) (A# Bb) (B)))
 
 (define (sharp-or-flat? note)
-  ;; sharp-or-flat? :: Note -> Boolean
+  ;; sharp-or-flat? :: NoteName -> Boolean
   (let ([str (symbol->string note)])
     (or (string-suffix? str "#")
         (string-suffix? str "b"))))
@@ -107,6 +111,7 @@
   ;; Collapse notes based on the given reference note
   ;; C# -> D#, F#..., but Db -> Eb, Gb...
   ;; e.g. (collapse 'Eb '((C# Db) (F# Gb) (B))) => '(Db Gb B)
+  ;; collapse :: NoteName -> [[NoteName]] -> [NoteName]
   (let ([ref-note (symbol->string ref)])
     (if (and ((string-length ref-note) . = . 2)
              (string-suffix? ref-note "b"))
@@ -119,24 +124,25 @@
   (map+ (compose1 (r/flip r/nth all-notes) mod12)))
 
 (define num->note*
-  ;; Collapse the note options
+  ;; Collapsed version of num->note using sharps as default
   (compose (collapse 'C) num->note))
  
 ;;-----------------------
 ;; Define better wrappers
 
-(define/curry (wrap f x)
+(define/curry (map-note f x)
   ;; Wrap note->num and num->note
   ;; e.g. (wrap (transpose 2) '(C D E)) => '(D E F#)
-  ;;      (wrap maj2 'G) => '(G A B D)
+  ;; wrap :: (Integer -> Integer) -> [NoteName] -> NoteName
   (~>> x
        note->num
        f
        num->note*))
 
-(define/curry (wrapl f x)
+(define/curry (map-note-list f x)
   ;; Wrap a function that returns a list
   ;; e.g. (wrapl inversions '(C E G)) => '((G C E) (C E G) (E G C))
+  ;; wrapl :: (Integer -> [Integer]) -> [NoteName] -> [NoteName]
   (~>> x
        note->num
        f

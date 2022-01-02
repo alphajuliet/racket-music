@@ -14,7 +14,8 @@
              (check-equal? (canonical '(6 2 8)) '(4 0 6)))
 
   (test-case "Reverse chord lookup"
-             (check-equal? (num->chord '(0 4 7)) (chord 'C 'major)))
+             (check-equal? (num->chord '(0 4 7)) (chord 'C 'major))
+             (check-equal? (num->chord '(4 7 0)) (chord 'E 'min#5)))
 
   (test-case "Find notes in chords"
              (check-equal? (contains-note? (chord 'A# 'major) 'D) #t)

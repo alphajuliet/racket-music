@@ -4,6 +4,7 @@
 
 (require rackunit
          rackunit/text-ui
+         rakeda
          "core.rkt")
 
 (define-test-suite music-tests
@@ -45,7 +46,7 @@
     (check-equal? (collapse 'C# x) '(C D# G#)))
 
   (test-case "Wrapped functions"
-    (check-equal? (wrap (transpose 2) '(C E G)) '(D F# A)))
+    (check-equal? (map-note (transpose 2) '(C E G)) '(D F# A)))
 
   )
 

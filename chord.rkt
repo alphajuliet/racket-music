@@ -51,7 +51,7 @@
         'maj+2   '(0 2 4 7)
         'min+2   '(0 2 3 7)
         'mixed3  '(0 3 4 7)
-        'sus24   '(0 2 5 7)
+        'sus2+4  '(0 2 5 7)
         'maj4+6  '(0 4 5 9)
         'min4+6  '(0 3 5 8)
         'min+6   '(0 3 7 9)
@@ -75,6 +75,7 @@
             (values root name)))
 
 (define (random-chord)
+  ;; -> Chord
   (let ([root (r/random-element note-names)]
         [ch (r/random-element chord-names)])
     (chord root ch)))
@@ -82,6 +83,7 @@
 ;;-----------------------
 (define (canonical ch)
   ;; Transpose a list down to start at 0
+  ;; canonical :: [Integer] -> [Integer]
   (map+ (transpose (- (list-min ch))) ch))
 
 ;;-----------------------
@@ -91,38 +93,38 @@
   (transpose (note->num (chord-root ch))
              (hash-ref chords (chord-name ch))))
 
-(define (num->chord ch)
+(define (num->chord nn)
   ;; Do a reverse lookup of a chord name based on note numbers
   ;; If not recognised then just return the note names
-  ;; lookup-chord :: [Integer] -> Chord
-  (let* ([n (first ch)]
+  ;; lookup-chord :: [Integer] -> Chord | [Integer]
+  (let* ([n (first nn)]
          [root (num->note* n)]
-         [c (transpose (- n) ch)]
+         [c (transpose* (- n) nn)]
          [name (hash-lookup chords c)])
     (if (false? name)
-        (num->note* ch)
+        (num->note* nn)
         (chord root name))))
+
+(define note->chord
+  (compose num->chord note->num))
 
 (define chord->notes (compose1 num->note* chord->num))
 (define chord->notes* (compose1 num->note chord->num))
 (define (list->chord lst) (chord (first lst) (last lst)))
 
 ;;-----------------------
-(define (inversions notes)
-  ;; Show all inversions of a chord
-  (r/iterate r/rotate-left (sub1 (length notes)) notes))
-
-(define/curry (wrapc f ch)
+(define/curry (map-chord f ch)
   ;; Wrap a function that returns a list
-  ;; e.g. (wrapc inversions (chord 'C 'major)) => '((chord 'E 'x4+6) (chord 'A 'major) (chord 'C# 'min6))
+  ;; e.g. (map-chord (transpose 2) (chord 'D 'minor)) => (chord 'E 'minor)
+  ;; map-chord :: (Integer -> Integer) -> Chord -> [Chord | [Integer]]
   (~>> ch
        chord->num
        f
        (map++ num->chord)))
 
-(define/curry (wrapc< f ch)
-  ;; A note-sorted version of wrapc
-  ;; e.g. (wrapc< P (chord 'C major)) => (chord 'C 'minor)
+(define/curry (map-chord< f ch)
+  ;; A note-sorted version of map-chord
+  ;; e.g. (map-chord< P (chord 'C major)) => (chord 'C 'minor)
   (~>> ch
        chord->num
        f
@@ -131,7 +133,7 @@
 
 (define (contains-note? ch note)
   ;; Does a chord contain the given note?
-  ;; common-note :: [Chord] -> Note -> Boolean
+  ;; common-note :: [Chord] -> NoteName -> Boolean
   (r/in? note (flatten (chord->notes* ch))))
 
 (define (chord-contains note)
