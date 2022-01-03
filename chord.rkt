@@ -6,6 +6,7 @@
 
 (require threading
          rakeda
+         data/functor
          ;; define-with-spec
          "core.rkt")
 
@@ -72,7 +73,13 @@
             (unless (and (r/in? root (flatten all-notes))
                          (r/in? name chord-names))
               (error "Invalid fields: (chord <root> <name>)"))
-            (values root name)))
+            (values root name))
+  #:methods gen:functor
+  [(define (map f ch)
+     (~>> ch
+          chord->num
+          f
+          (map++ num->chord)))])
 
 (define (random-chord)
   ;; -> Chord
@@ -113,7 +120,8 @@
 (define (list->chord lst) (chord (first lst) (last lst)))
 
 ;;-----------------------
-(define/curry (map-chord f ch)
+(define map-chord map)
+#;(define/curry (map-chord f ch)
   ;; Wrap a function that returns a list
   ;; e.g. (map-chord (transpose 2) (chord 'D 'minor)) => (chord 'E 'minor)
   ;; map-chord :: (Integer -> Integer) -> Chord -> [Chord | [Integer]]
