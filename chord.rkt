@@ -7,6 +7,7 @@
 (require threading
          rakeda
          data/functor
+         racket/generator
          ;; define-with-spec
          "core.rkt")
 
@@ -149,7 +150,7 @@
   ;; chord-contains :: Note -> [Chord]
   (let ([ch (map list->chord
                  (cartesian-product note-names my-chords))])
-    (filter (r/flip contains-note? note) ch)))
+    (filter (r/flip contains-note? note) (stream->list ch))))
 
 (define (random-related-chord ch #:change-root [chg-root #t])
   ;; Pick a random chord with at least one note in common
@@ -171,5 +172,11 @@
   ;; Generate n chords with a common note
   ;; random-chords-with-note :: Integer -> Note -> [Chord]
   (r/repeatedly n (λ () (r/random-element (chord-contains note)))))
+
+(define (random-chord-generator (note 'C))
+  ;; Create a generator of chords that contain the given note
+  ;; e.g. (define f (random-chord-generator 'F))
+  (infinite-generator
+   (yield (r/random-element (chord-contains note)))))
 
 ;; The End

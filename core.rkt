@@ -74,7 +74,10 @@
   ;; Show all inversions of note numbers
   ;; inversions :: [Integer] -> [[Integer]]
   ;; e.g. inversions (0 4 7) => ((0 4 7) (4 7 0) (7 0 4))
-  (r/iterate r/rotate-left (sub1 (length notes)) notes))
+  (if (list? notes)
+      (r/iterate r/rotate-left (sub1 (length notes)) notes)
+      ;;else
+      notes))
 
 ;;-----------------------
 ;; Musical data structures and conversions
