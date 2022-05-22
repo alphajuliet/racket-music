@@ -12,17 +12,33 @@ This is very much a work in progress.
 
 ### core.rkt
 
-The basic functions for manipulating and converting between note numbers (integers) and note names ('C to 'B), and providing basic functions for transposing, inverting, and modulo 12. It also provides some utility functions for mapping over either single items, or lists.   
+The basic functions for manipulating and converting between note numbers (integers) and note names ('C to 'B), and providing basic functions for transposing, inverting, and modulo 12. 
 
-There are also wrappers for functions that expect note numbers that can be used for note names, so that you can, for example, transpose the notes '(C D E).
+- `transpose transpose* invert invert*`
+- `inversions`
+- `note->num num->note num->note* collapse`
+- `map-note`
 
-Most functions that take more than one argument are already curried so that you can easily use them in higher-order functions without explicitly doing partial evaluation. An example is `(wrap (transpose 2) '(C D E))`.
+Transpositions and inversions expect note numbers. `map-note` is a wrapper for note names, for example `(map-note (transpose 4) '(C D E))`.
+
+Functions that take more than one argument are already curried so that you can easily use them in higher-order functions without explicitly doing partial evaluation. 
 
 ### chord.rkt
 
 Chords are implemented as a simple type with two fields: root note and chord name, e.g. `(chord 'E 'minor)`. A hash table of common chords are defined in `chords` so that we can switch between note numbers, note names, and chord names using the provided conversion functions. This includes a reverse lookup `(num->chord...)` that tries to match a list of note numbers to a defined chord name.
 
-A wrapper function is also provided for chords, e.g. `(wrapc inversions (chord 'D 'major))`. There are also functions for finding notes in one or more chords. 
+- `chord->num num->chord note->chord chord->notes chord->notes* canonical`
+- `map-chord map-chord<`
+- `contains-note? chord-contains?`
+- `random-chord random-related-chord random-related-chords random-chords-with-note random-chord-generator`
+
+A mapping function is also provided for chords, e.g. `(map-chord inversions (chord 'D 'major))`. There are also functions for finding notes in one or more chords, and for generating chords within some constraints. 
+
+### scale.rkt
+
+Scales are based on a root note and a scale name, e.g. major, minor, myxolydian
+
+- `scale->num scale->notes scale->notes*`
 
 ### neoriemann.rkt
 
