@@ -21,33 +21,12 @@
 (define list-min
   ;; Minimum value of a list
   ;; list-min :: Sortable a ⇒ [a] → a
+  ;; e.g. (list-min '(4 1 8 3)) => 1
   (curry apply min))
 
 (define mod12
   ;; mod12 :: Integer -> Integer
   (r/flip modulo 12))
-
-(define (hash-lookup h value)
-  ;; Return the first key that has the given value, otherwise #f
-  ;; hash-lookup :: (Hash k v) -> v -> k
-  (let ([lst (filter (λ (k) (equal? value (hash-ref h k)))
-                     (hash-keys h))])
-    (if (empty? lst)
-        #f
-        (first lst))))
-
-(define (select-keys h ks)
-  ;; Return the hash entries that just contain the given keys
-  ;; select-keys :: Hash k v -> [k] -> Hash k v
-  (for/hash ([k ks])
-    (values k (hash-ref h k))))
-
-(define (hash-map f h)
-  ;; Do mapping over all values in a hash and return a new hash.
-  ;; hash-map :: (a -> b -> c) -> Hash a b -> Hash a c
-  (for/fold ([h-out (make-immutable-hash)])
-            ([(k v) (in-hash h)])
-    (hash-set h-out k (f k v))))
 
 ;;-----------------------
 (define/curry (transpose n x)
@@ -94,6 +73,7 @@
   '((C) (C# Db) (D) (D# Eb) (E) (F) (F# Gb) (G) (G# Ab) (A) (A# Bb) (B)))
 
 (define (sharp-or-flat? note)
+  ;; Is this note a sharp/flat?
   ;; sharp-or-flat? :: NoteName -> Boolean
   (let ([str (symbol->string note)])
     (or (string-suffix? str "#")
@@ -101,9 +81,11 @@
 
 ;;-----------------------
 (define (note->num n)
+  ;; Convert notes to numbers based on a C root
   ;; note->num :: NoteName → Integer || [NoteName] → [Integer]
-  (map+ (λ (e) (r/index-where (curry true?)
-                              (map (curry r/index-of e) all-notes)))
+  (map+ (λ (e)
+          (r/index-where (curry true?)
+                         (map (r/index-of e) all-notes)))
         n))
 
 (define/curry (collapse ref note)

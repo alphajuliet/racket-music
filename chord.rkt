@@ -108,7 +108,7 @@
   (let* ([n (first nn)]
          [root (num->note* n)]
          [c (transpose* (- n) nn)]
-         [name (hash-lookup chords c)])
+         [name (r/hash-lookup chords c)])
     (if (false? name)
         (num->note* nn)
         (chord root name))))
