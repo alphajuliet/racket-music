@@ -122,14 +122,6 @@
 
 ;;-----------------------
 (define map-chord map)
-#;(define/curry (map-chord f ch)
-  ;; Wrap a function that returns a list
-  ;; e.g. (map-chord (transpose 2) (chord 'D 'minor)) => (chord 'E 'minor)
-  ;; map-chord :: (Integer -> Integer) -> Chord -> [Chord | [Integer]]
-  (~>> ch
-       chord->num
-       f
-       (map++ num->chord)))
 
 (define/curry (map-chord< f ch)
   ;; A note-sorted version of map-chord
