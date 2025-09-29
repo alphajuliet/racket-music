@@ -37,7 +37,8 @@
 
   (test-case "note->num"
     (check-equal? (note->num 'G#) 8)
-    (check-equal? (note->num 'Ab) 8))
+    (check-equal? (note->num 'Ab) 8)
+    (check-equal? (note->num '(C D E)) '(0 2 4))))
 
   (test-case "collapse"
     (define x (num->note '(0 3 8)))
@@ -47,7 +48,7 @@
 
   (test-case "Wrapped functions"
     (check-equal? (map-note (transpose 2) '(C E G)) '(D F# A))
-    (check-equal? (length (map-note inversions '(C F A))) 3)))
+    (check-equal? (length (map-note inversions '(C F A))) 3))
 
 (run-tests music-tests)
 

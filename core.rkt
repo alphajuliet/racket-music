@@ -8,15 +8,28 @@
 (require threading
          rakeda)
 
+;; Contracts for better documentation and error checking
+(define note-name? symbol?)
+(define note-names? (listof note-name?))
+(define note-number? integer?)
+(define note-numbers? (listof note-number?))
+
 ;;-----------------------
 ;; Utility functions
 
+(define/curry (map-notes f lst)
+  ;; Apply function to notes, handling both single notes and lists of notes
+  ;; More idiomatic version using match for clarity
+  (match lst
+    [(list (? list? _) ...) (map f lst)]  ; list of lists
+    [_ (f lst)]))  ; single item
+
 (define/curry (map++ f lst)
   ;; Generic map across a list or list of lists
-  (if (and~> lst first list?)
-      (map f lst)
-      ;; else
-      (f lst)))
+  ;; map++ :: (a -> b) -> (a | [a]) -> (b | [b])
+  (cond
+    [(list? lst) (map f lst)]
+    [else (f lst)]))
 
 (define list-min
   ;; Minimum value of a list
@@ -32,30 +45,31 @@
 (define/curry (transpose n x)
   ;; Transpose a note or chord
   ;; transpose :: Integer -> Integer -> Integer
-  (map+ (r/+ n) x))
+  (map++ (r/+ n) x))
 
 (define/curry (transpose* n x)
   ;; Transpose a note or chord, modulo 12
   ;; e.g. (transpose* 14 '(0 3 7)) => '(2 5 9)
   ;; transpose* :: Integer -> Integer -> Integer
-  (map+ (compose1 mod12 (r/+ n)) x))
+  (map++ (compose1 mod12 (r/+ n)) x))
 
 (define/curry (invert n x)
   ;; invert :: Integer -> Integer -> Integer
-  (map+ (r/- n) x))
+  (map++ (r/- n) x))
 
 (define/curry (invert* n x)
   ;; Invert modulo 12
   ;; invert* :: Integer -> Integer -> Integer
-  (map+ (compose1 mod12 (r/- n)) x))
+  (map++ (compose1 mod12 (r/- n)) x))
 
 (define (inversions notes)
   ;; Show all inversions of note numbers
   ;; inversions :: [Integer] -> [[Integer]]
-  ;; e.g. inversions (0 4 7) => ((0 4 7) (4 7 0) (7 0 4))
+  ;; e.g. (inversions '(0 4 7)) => '((0 4 7) (4 7 0) (7 0 4))
   (if (list? notes)
-      (r/iterate r/rotate-left (sub1 (length notes)) notes)
-      ;;else
+      (let ([len (length notes)])
+        (for/list ([i (in-range len)])
+          (append (drop notes i) (take notes i))))
       notes))
 
 ;;-----------------------
@@ -75,34 +89,41 @@
 (define (sharp-or-flat? note)
   ;; Is this note a sharp/flat?
   ;; sharp-or-flat? :: NoteName -> Boolean
-  (let ([str (symbol->string note)])
-    (or (string-suffix? str "#")
-        (string-suffix? str "b"))))
+  (define note-str (symbol->string note))
+  (or (string-suffix? note-str "#")
+      (string-suffix? note-str "b")))
 
 ;;-----------------------
-(define (note->num n)
+(define (note->num notes)
   ;; Convert notes to numbers based on a C root
   ;; note->num :: NoteName → Integer || [NoteName] → [Integer]
-  (map+ (λ (e)
-          (r/index-where (curry true?)
-                         (map (r/index-of e) all-notes)))
-        n))
+  (define (note-index note)
+    ;; Find the index of a note in all-notes, handling enharmonic equivalents
+    (for/first ([note-group (in-list all-notes)]
+                [index (in-naturals)]
+                #:when (member note note-group))
+      index))
 
-(define/curry (collapse ref note)
+  (cond
+    [(list? notes) (map note-index notes)]
+    [else (note-index notes)]))
+
+(define collapse
   ;; Collapse notes based on the given reference note
   ;; C# -> D#, F#..., but Db -> Eb, Gb...
   ;; e.g. (collapse 'Eb '((C# Db) (F# Gb) (B))) => '(Db Gb B)
   ;; collapse :: NoteName -> [[NoteName]] -> [NoteName]
-  (let ([ref-note (symbol->string ref)])
-    (if (and ((string-length ref-note) . = . 2)
-             (string-suffix? ref-note "b"))
-        (map++ last note)
-        ;; else
-        (map++ first note))))
+  (curry (λ (ref note)
+           (let* ([ref-str (symbol->string ref)]
+                  [use-flats? (and (= (string-length ref-str) 2)
+                                   (string-suffix? ref-str "b"))])
+             (if use-flats?
+                 (map-notes last note)
+                 (map-notes first note))))))
 
 (define num->note
   ;; num->note :: [Integer] → [[NoteName]] || Integer → [NoteName]
-  (map+ (compose1 (r/flip r/nth all-notes) mod12)))
+  (map++ (compose1 (r/flip r/nth all-notes) mod12)))
 
 (define num->note*
   ;; Collapsed version of num->note using sharps as default
@@ -116,17 +137,9 @@
   ;; e.g. (map-note inversions '(C E G)) => '((G C E) (C E G) (E G C))
   ;; map-note :: (Integer -> Integer) -> [NoteName] -> NoteName
   (~>> x
-       (map+ note->num)
+       (map++ note->num)
        f
-       (map+ num->note*)))
+       (map++ num->note*)))
 
-#;(define/curry (map-note-list f x)
-  ;; Lift map-note to work on lists
-  ;; e.g. (map-note-list inversions '(C E G)) => '((G C E) (C E G) (E G C))
-  ;; map-note-list :: (Integer -> [Integer]) -> [NoteName] -> [NoteName]
-  (~>> x
-       note->num
-       f
-       (r/map num->note*)))
 
 ;; The End
