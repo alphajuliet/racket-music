@@ -113,7 +113,7 @@
         (num->note* nn)
         (chord root name))))
 
-(define note->chord
+(define notes->chord
   (compose num->chord note->num))
 
 (define chord->notes (compose1 num->note chord->num))

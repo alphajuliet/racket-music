@@ -17,7 +17,9 @@
 
   (test-case "Reverse chord lookup"
              (check-equal? (num->chord '(0 4 7)) (chord 'C 'major))
-             (check-equal? (num->chord '(4 7 0)) (chord 'E 'min#5)))
+             (check-equal? (num->chord '(4 7 0)) (chord 'E 'min#5))
+             (check-equal? (notes->chord '(D F A C)) (chord 'D 'min7))
+             (check-equal? (notes->chord '(C C# D)) '(C C# D)))
 
   (test-case "Find notes in chords"
              (check-equal? (contains-note? (chord 'A# 'major) 'D) #t)
@@ -27,7 +29,8 @@
              (check-equal? (length (chord-contains 'F)) 34))
 
   (test-case "Chord mapping"
-             (check-equal? (map (transpose 2) (chord 'C 'minor)) (chord 'D 'minor))))
+             (check-equal? (map (transpose 2) (chord 'C 'minor)) (chord 'D 'minor))
+             (check-equal? (map (invert 3) (chord 'E 'minor)) '(B G# E))))
 
 (run-tests chord-test)
 ;; The End
