@@ -2,7 +2,9 @@
 
 (require rackunit
          rackunit/text-ui
-         "chord.rkt")
+         data/functor
+         "chord.rkt"
+         "core.rkt")
 
 (define-test-suite chord-test
 
@@ -22,7 +24,10 @@
              (check-equal? (contains-note? (chord 'A# 'major) 'E) #f)
              (check-equal? (contains-note? (chord 'C 'minor) 'Eb) #t)
              (check-equal? (contains-note? (chord 'C 'minor) 'D#) #t)
-             (check-equal? (length (chord-contains 'F)) 30)))
+             (check-equal? (length (chord-contains 'F)) 34))
+
+  (test-case "Chord mapping"
+             (check-equal? (map (transpose 2) (chord 'C 'minor)) (chord 'D 'minor))))
 
 (run-tests chord-test)
 ;; The End

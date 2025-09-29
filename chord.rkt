@@ -64,7 +64,7 @@
 
 (define my-chords
   ;; The main chords I'm interested in
-  '(major minor maj7 min7 maj9 min9 maj6 min6))
+  '(major minor maj7 min7 maj9 min9 maj6 min6 sus2+4))
 
 (struct chord (root name)
   ;; Define the chord type
@@ -73,14 +73,14 @@
   #:guard (λ (root name _)
             (unless (and (r/in? root (flatten all-notes))
                          (r/in? name chord-names))
-              (error "Invalid fields: (chord <root> <name>)"))
+              (raise-user-error 'chord "Invalid note or chord name"))
             (values root name))
   #:methods gen:functor
   [(define (map f ch)
      (~>> ch
           chord->num
           f
-          (map++ num->chord)))])
+          num->chord))])
 
 (define (random-chord)
   ;; -> Chord
